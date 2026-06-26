@@ -16,6 +16,8 @@ Auth = egen JWT, roller Owner/Admin/Member. Rate limiting per tenant. Stripe i t
 (prenumeration av tenants). Deploy: Cloudflare Pages + Render + MongoDB Atlas via GitHub
 Actions.
 
-Ingen aktiv feature ännu — nästa steg är `/speckit-specify` för 001 (SaaS-skelett:
-tenancy + auth + roller + rate limiting + Stripe).
+Aktiv feature: **001 — SaaS-skelett** (tenancy + auth + roller + plan/Stripe + rate limiting).
+- Spec: [specs/001-saas-skelett/spec.md](specs/001-saas-skelett/spec.md)
+- Checklista: [specs/001-saas-skelett/checklists/requirements.md](specs/001-saas-skelett/checklists/requirements.md)
+Nästa steg: `/speckit-clarify` (bekräfta öppna val) → `/speckit-plan`. Fakturadomänen = spec 002.
 <!-- SPECKIT END -->

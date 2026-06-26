@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.*.local.json
+
+# Node / Vite
+node_modules/
+dist/
+dev-dist/
+.vite/
+*.log
+
+# Secrets / env (ALDRIG checka in nycklar — Stripe, JWT, Mongo)
+.env
+.env.*
+!.env.example
+secrets.json
+*.secrets.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.idea/

@@ -22,5 +22,6 @@ Aktiv feature: **001 — SaaS-skelett** (tenancy + auth + roller + plan/Stripe +
 - Design: [research.md](specs/001-saas-skelett/research.md) · [data-model.md](specs/001-saas-skelett/data-model.md) · [contracts/rest-api.md](specs/001-saas-skelett/contracts/rest-api.md) · [quickstart.md](specs/001-saas-skelett/quickstart.md)
 Clarify klar (2026-06-28): self-service onboarding, JWT-claim-routing, Free/Pro = seats + rate-limit, ingen e-postverifiering i v1.
 Plan klar: .NET 10 clean architecture (Api/Domain/Infrastructure) + React/Vite, JWT access+refresh, TenantScopedRepository, inbyggd rate limiting per tenant, Stripe.net webhooks.
-Nästa steg: `/speckit-tasks` → `/speckit-implement` (TDD). Fakturadomänen = spec 002.
+Tasks klara: [tasks.md](specs/001-saas-skelett/tasks.md) (T001–T040, TDD-ordnat per US, 8 faser).
+Nästa steg: `/speckit-implement` (bygg, TDD — börja Phase 1–2 + US1 som MVP). Fakturadomänen = spec 002.
 <!-- SPECKIT END -->

@@ -14,6 +14,20 @@ betalleverantör i testläge) och får ett konto vars data är **helt isolerat**
 organisationer. Anrop **rate-limitas per organisation**. Ingen fakturadomän ingår här —
 den byggs i spec 002 ovanpå detta skelett.
 
+## Clarifications
+
+### Session 2026-06-28
+
+- **Onboarding:** Self-service — vem som helst registrerar en organisation från en publik
+  signup-sida och blir Owner direkt.
+- **Tenant-routing:** Endast via JWT-claim. En gemensam app-URL; ingen synlig tenant i
+  subdomän eller path i v1.
+- **Free vs Pro:** Skiljer på **seats + rate-limit**. Free = begränsat antal användare
+  (standard 2) + lägre anropskvot; Pro = fler användare + högre kvot. Gränserna är
+  datadrivna (plan-konfiguration). Fakturaspecifika gränser definieras i spec 002.
+- **E-postverifiering:** Ingen i v1 — kontot blir aktivt direkt vid registrering (kan
+  läggas till senare; kräver då en e-postleverantör).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Registrera organisation och bli ägare (Priority: P1)
@@ -93,6 +107,9 @@ samma åtgärd lyckas som Admin/Owner.
    Member, **Then** uppdateras rollen; men endast Owner kan tilldela/ta bort Owner.
 4. **Given** den enda Owner:n, **When** hon försöker ta bort/nedgradera sig själv, **Then**
    förhindras det så att organisationen aldrig blir utan Owner.
+5. **Given** en Free-organisation som redan nått sin seat-gräns (standard 2), **When**
+   Owner/Admin bjuder in ytterligare en användare, **Then** nekas det med hänvisning till
+   uppgradering till Pro.
 
 ---
 
@@ -206,6 +223,9 @@ ett begränsningssvar med vänta-information, medan organisation B samtidigt är
 - **FR-018**: Systemet MÅSTE nedgradera en organisation när dess prenumeration upphör/avslutas.
 - **FR-019**: Vilka funktioner/kvoter en plan ger MÅSTE styras av **plan-konfiguration**
   (datadrivet), inte hårdkodade villkor spridda i logiken.
+- **FR-025**: Systemet MÅSTE begränsa antalet aktiva användare per organisation till
+  planens **seat-gräns** (standard Free = 2). Ett inbjudnings-/aktiveringsförsök utöver
+  gränsen MÅSTE nekas med ett tydligt fel som hänvisar till uppgradering.
 
 **Rate limiting**
 - **FR-020**: Systemet MÅSTE begränsa anropsfrekvens **per organisation** enligt dess plan.
@@ -251,17 +271,19 @@ ett begränsningssvar med vänta-information, medan organisation B samtidigt är
 
 ## Assumptions
 
-- **Onboarding:** Self-service — vem som helst kan registrera en ny organisation i v1
-  (ingen invite-only-spärr). Bekräftas i `/speckit-clarify`.
-- **Tenant-routing:** Organisationstillhörighet bärs i sessionen/token; ingen synlig
-  subdomän eller path-baserad tenant-routing i v1.
+- **Onboarding:** Self-service — vem som helst registrerar en ny organisation i v1 (beslut
+  2026-06-28, se Clarifications).
+- **Tenant-routing:** Organisationstillhörighet bärs enbart i sessionen/token; ingen synlig
+  subdomän eller path-baserad tenant-routing i v1 (beslut 2026-06-28).
+- **E-postverifiering:** Ingen i v1 — kontot är aktivt direkt vid registrering (beslut
+  2026-06-28).
 - **En användare = en organisation** i v1. Samma person i flera organisationer (org-byte)
   är utanför scope och kräver senare spec.
 - **Betalleverantör:** Stripe i **testläge** (per SPEC-BRIEF/constitution). Endast
   SaaS-prenumerationen hanteras — inte indrivning av kundfakturor.
-- **Plannivåer:** Exakt vilka kvoter/funktioner Free vs Pro ger (antal användare,
-  rate-limit-tak, m.m.) fastställs i `/speckit-clarify`/plan; skelettet kräver bara att
-  gränserna är datadrivna och minst två nivåer finns.
+- **Plannivåer (beslut 2026-06-28):** Free och Pro skiljer på **seats + rate-limit**.
+  Standard: Free = 2 användare + lägre kvot, Pro = fler användare + högre kvot. Exakta
+  rate-limit-tak finjusteras i `/speckit-plan`; gränserna ska vara datadrivna.
 - **Stack** (ej en del av detta *vad*, men låst i brief/constitution): .NET-API + MongoDB +
   React, egen JWT. Detaljeras i `/speckit-plan`.
 

@@ -31,10 +31,10 @@
 
 ## Notes
 
-- Inga [NEEDS CLARIFICATION]-markörer kvar: öppna val (onboarding self-service vs
-  invite-only, tenant-routing, exakta Free/Pro-kvoter) är hanterade med informerade
-  standardval och dokumenterade i **Assumptions**. Bekräftas i `/speckit-clarify` innan
-  `/speckit-plan`.
+- Inga [NEEDS CLARIFICATION]-markörer kvar. Öppna val är nu **bekräftade** i
+  `/speckit-clarify` (session 2026-06-28): self-service onboarding, JWT-claim-routing,
+  Free/Pro skiljer på seats + rate-limit, ingen e-postverifiering i v1. Se **Clarifications**
+  och **Assumptions** i spec.md. Redo för `/speckit-plan`.
 - "Stack låst i brief/constitution" nämns i Assumptions endast som referens — inga
   implementationsdetaljer ligger i krav eller success-kriterier (de är
   beteende-/utfallsbaserade).

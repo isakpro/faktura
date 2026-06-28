@@ -19,5 +19,6 @@ Actions.
 Aktiv feature: **001 — SaaS-skelett** (tenancy + auth + roller + plan/Stripe + rate limiting).
 - Spec: [specs/001-saas-skelett/spec.md](specs/001-saas-skelett/spec.md)
 - Checklista: [specs/001-saas-skelett/checklists/requirements.md](specs/001-saas-skelett/checklists/requirements.md)
-Nästa steg: `/speckit-clarify` (bekräfta öppna val) → `/speckit-plan`. Fakturadomänen = spec 002.
+Clarify klar (2026-06-28): self-service onboarding, JWT-claim-routing, Free/Pro = seats + rate-limit, ingen e-postverifiering i v1.
+Nästa steg: `/speckit-plan`. Fakturadomänen = spec 002.
 <!-- SPECKIT END -->

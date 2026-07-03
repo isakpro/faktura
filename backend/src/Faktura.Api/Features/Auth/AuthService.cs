@@ -4,6 +4,7 @@ using Faktura.Domain.Common;
 using Faktura.Domain.Organizations;
 using Faktura.Domain.Users;
 using Faktura.Infrastructure.Security;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Faktura.Api.Features.Auth;
@@ -22,6 +23,8 @@ public sealed class AuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
+    private readonly ILoginThrottle _throttle;
+    private readonly ILogger<AuthService> _logger;
     private readonly JwtOptions _jwt;
 
     public AuthService(
@@ -33,6 +36,8 @@ public sealed class AuthService
         IPasswordHasher passwordHasher,
         IIdGenerator ids,
         IClock clock,
+        ILoginThrottle throttle,
+        ILogger<AuthService> logger,
         IOptions<JwtOptions> jwt)
     {
         _users = users;
@@ -43,6 +48,8 @@ public sealed class AuthService
         _passwordHasher = passwordHasher;
         _ids = ids;
         _clock = clock;
+        _throttle = throttle;
+        _logger = logger;
         _jwt = jwt.Value;
     }
 
@@ -61,6 +68,7 @@ public sealed class AuthService
         await _organizations.AddAsync(organization, ct);
         await _users.AddAsync(owner, ct);
 
+        _logger.LogInformation("Organization {TenantId} registered with owner {UserId}", organization.Id, owner.Id);
         var response = await IssueTokensAsync(owner, organization, ct);
         return Result.Success(response);
     }
@@ -71,14 +79,27 @@ public sealed class AuthService
         if (email.IsFailure)
             return Result.Failure<AuthResponse>(Error.InvalidCredentials());
 
-        var user = await _users.GetByEmailAsync(email.Value.Value, ct);
+        var key = email.Value.Value;
+        if (_throttle.IsBlocked(key, out var retryAfter))
+        {
+            _logger.LogWarning("Login blocked by throttle for {Email}", key);
+            return Result.Failure<AuthResponse>(Error.TooManyAttempts(retryAfter));
+        }
+
+        var user = await _users.GetByEmailAsync(key, ct);
         if (user is null || !_passwordHasher.Verify(user.PasswordHash, request.Password))
+        {
+            _throttle.RecordFailure(key);
+            _logger.LogWarning("Failed login attempt for {Email}", key);
             return Result.Failure<AuthResponse>(Error.InvalidCredentials());
+        }
 
         var organization = await _organizations.GetByIdAsync(user.TenantId, ct);
         if (organization is null)
             return Result.Failure<AuthResponse>(Error.InvalidCredentials());
 
+        _throttle.Reset(key);
+        _logger.LogInformation("User {UserId} logged in (tenant {TenantId})", user.Id, organization.Id);
         var response = await IssueTokensAsync(user, organization, ct);
         return Result.Success(response);
     }

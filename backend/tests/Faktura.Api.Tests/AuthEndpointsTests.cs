@@ -81,6 +81,26 @@ public class AuthEndpointsTests : IClassFixture<FakturaApiFactory>
     }
 
     [Fact]
+    public async Task Repeated_failed_logins_are_throttled_with_429_and_retry_after()
+    {
+        var client = _factory.CreateClient();
+        await client.PostAsJsonAsync("/api/auth/register", NewOrg("throttle@acme.se"));
+
+        // MaxAttempts = 3 (test config): three wrong passwords, then locked out.
+        for (var i = 0; i < 3; i++)
+        {
+            var attempt = await client.PostAsJsonAsync("/api/auth/login",
+                new LoginRequest("throttle@acme.se", "wrong-password"));
+            Assert.Equal(HttpStatusCode.Unauthorized, attempt.StatusCode);
+        }
+
+        var blocked = await client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest("throttle@acme.se", "password1")); // even correct pw is blocked now
+        Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
+        Assert.NotNull(blocked.Headers.RetryAfter);
+    }
+
+    [Fact]
     public async Task Me_without_token_returns_401()
     {
         var client = _factory.CreateClient();

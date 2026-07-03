@@ -43,9 +43,9 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 - [x] T016 [US1] Domän: `AccountRegistration` (skapa org+owner), `PasswordPolicy`, `EmailAddress`, login-verifiering — T014 grön
 - [x] T017 [US1] Infra: `MongoOrganizationRepository`, `MongoUserRepository`, `MongoRefreshTokenRepository`
 - [x] T018 [US1] Api: `AuthService` + endpoints `register`/`login`/`refresh`/`logout`/`me` per kontrakt — T015 grön
-- [ ] T019 [US1] Säkerhet: broms vid upprepade misslyckade inloggningar (FR-023), säkerhetsloggning (FR-024) — kvar
+- [x] T019 [US1] Säkerhet: `InMemoryLoginThrottle` (FR-023, broms → 429 + `Retry-After`) + säkerhetsloggning av register/login (FR-024)
 
-**Checkpoint ✅ (MVP)**: en användare kan registrera org, logga in, förnya token, hämta `/api/me`. `dotnet test` = 25 gröna. Kvar i US1: T019 (härdning).
+**Checkpoint ✅ (US1 komplett)**: registrera/logga in/förnya/`me` + login-broms. `dotnet test` = 26 gröna (17 domän + 9 API).
 
 ---
 

@@ -58,6 +58,18 @@ public static class AuthEndpoints
         "weak_password" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Svagt lösenord"),
         "email_in_use" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "E-post upptagen"),
         "invalid_credentials" => Results.Problem(error.Message, statusCode: StatusCodes.Status401Unauthorized, title: "Ogiltiga uppgifter"),
+        "too_many_attempts" => new RetryAfterProblem(error.RetryAfterSeconds ?? 60, error.Message),
         _ => Results.Problem(error.Message, statusCode: StatusCodes.Status400BadRequest, title: "Valideringsfel")
     };
+}
+
+/// <summary>A 429 problem response that also sets the <c>Retry-After</c> header.</summary>
+internal sealed class RetryAfterProblem(int retryAfterSeconds, string message) : IResult
+{
+    public async Task ExecuteAsync(HttpContext httpContext)
+    {
+        httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
+        await Results.Problem(message, statusCode: StatusCodes.Status429TooManyRequests, title: "För många försök")
+            .ExecuteAsync(httpContext);
+    }
 }

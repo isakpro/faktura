@@ -17,12 +17,14 @@ public static class DependencyInjection
         services.Configure<MongoOptions>(config.GetSection(MongoOptions.SectionName));
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.SectionName));
         services.Configure<PlanOptions>(config.GetSection(PlanOptions.SectionName));
+        services.Configure<ThrottleOptions>(config.GetSection(ThrottleOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, ObjectIdGenerator>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IPlanCatalog, PlanCatalog>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+        services.AddSingleton<ILoginThrottle, InMemoryLoginThrottle>();
 
         services.AddSingleton<MongoContext>();
         services.AddScoped<IOrganizationRepository, MongoOrganizationRepository>();

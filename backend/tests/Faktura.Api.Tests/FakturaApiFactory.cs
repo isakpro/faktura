@@ -30,7 +30,10 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenMinutes"] = "15",
                 ["Jwt:RefreshTokenDays"] = "30",
                 ["Plans:Free:SeatLimit"] = "2",
-                ["Plans:Pro:SeatLimit"] = "25"
+                ["Plans:Pro:SeatLimit"] = "25",
+                ["Throttle:MaxAttempts"] = "3",
+                ["Throttle:WindowSeconds"] = "900",
+                ["Throttle:LockoutSeconds"] = "900"
             });
         });
 

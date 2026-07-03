@@ -24,6 +24,9 @@ public sealed class MongoContext
     internal IMongoCollection<RefreshTokenDocument> RefreshTokens => _database.GetCollection<RefreshTokenDocument>("refreshTokens");
     internal IMongoCollection<InvitationDocument> Invitations => _database.GetCollection<InvitationDocument>("invitations");
     internal IMongoCollection<ProcessedEventDocument> ProcessedEvents => _database.GetCollection<ProcessedEventDocument>("processedStripeEvents");
+    internal IMongoCollection<CustomerDocument> Customers => _database.GetCollection<CustomerDocument>("customers");
+    internal IMongoCollection<InvoiceDocument> Invoices => _database.GetCollection<InvoiceDocument>("invoices");
+    internal IMongoCollection<InvoiceCounterDocument> InvoiceCounters => _database.GetCollection<InvoiceCounterDocument>("invoiceCounters");
 
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
@@ -61,6 +64,21 @@ public sealed class MongoContext
             new CreateIndexModel<InvitationDocument>(
                 Builders<InvitationDocument>.IndexKeys.Ascending(i => i.TokenHash),
                 new CreateIndexOptions { Unique = true, Name = "ux_invitation_token" })
+        }, ct);
+
+        await Customers.Indexes.CreateOneAsync(
+            new CreateIndexModel<CustomerDocument>(
+                Builders<CustomerDocument>.IndexKeys.Ascending(c => c.TenantId).Ascending(c => c.Name),
+                new CreateIndexOptions { Name = "ix_customer_tenant_name" }), cancellationToken: ct);
+
+        await Invoices.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<InvoiceDocument>(
+                Builders<InvoiceDocument>.IndexKeys.Ascending(i => i.TenantId).Ascending(i => i.Status),
+                new CreateIndexOptions { Name = "ix_invoice_tenant_status" }),
+            new CreateIndexModel<InvoiceDocument>(
+                Builders<InvoiceDocument>.IndexKeys.Ascending(i => i.TenantId).Ascending(i => i.Number),
+                new CreateIndexOptions { Name = "ux_invoice_tenant_number", Unique = true, Sparse = true })
         }, ct);
     }
 }

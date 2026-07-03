@@ -11,44 +11,40 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = parallelliserbart (olika fi
 
 ## Phase 1: Setup
 
-- [ ] T001 Lägg NuGet **QuestPDF** i `Faktura.Infrastructure`; nya mappar `Domain/Customers`,
-  `Domain/Invoicing`, `Infrastructure/Pdf`, `Api/Features/Customers`, `Api/Features/Invoicing`
-- [ ] T002 [P] Registrera `Decimal128`-serialisering/BSON-konventioner för belopp
+- [~] T001 Nya mappar Domain/Customers, Domain/Invoicing, Api/Features/{Customers,Invoicing}. (QuestPDF = US6)
+- [x] T002 [P] `Decimal128`-representation på beloppsfält i dokumenten
 
-## Phase 2: Foundational (blockerar user stories)
+## Phase 2: Foundational
 
-- [ ] T003 [P] [Domain] `Money`-värdetyp (decimal, öresavrundning away-from-zero) + tester
-- [ ] T004 [P] [Domain] Enums `VatRate` (25/12/6/0), `InvoiceStatus` (Draft/Sent/Paid/Credited), `InvoiceType` (Invoice/CreditNote)
-- [ ] T005 [Domain] `InvoiceCalculator` (rad-netto/moms, summa netto, moms per sats, brutto) — **TDD-kärna**
-- [ ] T006 [P] [Domain] Abstraktioner: `ICustomerRepository`, `IInvoiceRepository`, `IInvoiceNumberSequence`, `IInvoicePdfGenerator`, `IClock` (finns)
-- [ ] T007 [Infra] Mongo-collections + index (customers, invoices, invoiceCounters) i `MongoContext`
+- [x] T003 [P] [Domain] `Money`-värdetyp (decimal, öresavrundning away-from-zero)
+- [x] T004 [P] [Domain] Enums `VatRate` (25/12/6/0), `InvoiceStatus`, `InvoiceType`
+- [x] T005 [Domain] `InvoiceCalculator` (rad-netto/moms, summa netto, moms per sats, brutto) — TDD, grön
+- [x] T006 [P] [Domain] Abstraktioner: `ICustomerRepository`, `IInvoiceRepository`, `IInvoiceNumberSequence`
+- [x] T007 [Infra] Mongo-collections + index (customers, invoices, invoiceCounters) i `MongoContext`
 
 ## Phase 3: US1 — Kunder (P1)
 
-- [ ] T008 [P] [US1] Domäntester: `Customer` (namn obligatoriskt, arkivering)
-- [ ] T009 [P] [US1] Integrationstester: CRUD + arkiv, cross-tenant (A ser ej B)
-- [ ] T010 [US1] Domän `Customer` + Infra `MongoCustomerRepository` (TenantScopedRepository)
-- [ ] T011 [US1] Api `CustomerService` + endpoints (`/api/customers`) — grön T009
-
-**Checkpoint**: kunder fungerar, tenant-isolerat.
+- [x] T008 [P] [US1] Domän `Customer` (namn obligatoriskt, arkivering)
+- [x] T009 [P] [US1] Integrationstest: CRUD + cross-tenant (A ser ej B)
+- [x] T010 [US1] Infra `MongoCustomerRepository` (TenantScopedRepository)
+- [x] T011 [US1] Api `CustomerService` + endpoints (`/api/customers`) — grön
 
 ## Phase 4: US2 — Fakturautkast + moms (P1)
 
-- [ ] T012 [P] [US2] Domäntester: beräkning per sats + blandat + öresavrundning (SC-001)
-- [ ] T013 [P] [US2] Integrationstester: skapa/ändra utkast, summor i svar
-- [ ] T014 [US2] Domän `Invoice`/`InvoiceLine` (utkast: lägg/ändra/ta bort rad, räkna om via `InvoiceCalculator`)
-- [ ] T015 [US2] Infra `MongoInvoiceRepository`; Api `InvoiceService` + endpoints (skapa/hämta/ändra utkast) — grön T013
+- [x] T012 [P] [US2] Domäntester: beräkning per sats + blandat + öresavrundning (SC-001)
+- [x] T013 [P] [US2] Integrationstest: skapa/ändra utkast, summor i svar
+- [x] T014 [US2] Domän `Invoice`/`InvoiceLine` (utkast: räkna om via `InvoiceCalculator`)
+- [x] T015 [US2] Infra `MongoInvoiceRepository`; Api `InvoiceService` + endpoints — grön
 
-**Checkpoint**: utkast med korrekt moms.
+## Phase 5: US3 — Skicka: nummer + låsning (P1) 🎯 MVP
 
-## Phase 5: US3 — Skicka: nummer + låsning (P1) 🎯 MVP-mål
+- [x] T016 [P] [US3] Domäntester: skick sätter status/datum; mutation efter skick nekas (`invoice_locked`)
+- [x] T017 [P] [US3] Integrationstest: skick ger nummer + förfallodatum; skickad ej ändringsbar; **concurrency** (20 parallella skick → unika obrutna nummer, SC-002)
+- [x] T018 [US3] Infra `MongoInvoiceNumberSequence` (`FindOneAndUpdate $inc`, atomiskt)
+- [x] T019 [US3] Domän/tjänst: `Send()` + endpoint `/send`; `/mark-paid` — grön
 
-- [ ] T016 [P] [US3] Domäntester: skick sätter status/datum; mutation efter skick nekas (`invoice_locked`)
-- [ ] T017 [P] [US3] Integrationstester: skick ger nummer + förfallodatum; skickad ej ändringsbar; **concurrency** (parallella skick → unika obrutna nummer, SC-002)
-- [ ] T018 [US3] Infra `MongoInvoiceNumberSequence` (`FindOneAndUpdate $inc`, upsert, atomiskt)
-- [ ] T019 [US3] Domän/tjänst: `Send()` (nummer, faktura-/förfallodatum, lås); endpoint `/send` — grön T016/T017
-
-**Checkpoint ✅ (MVP)**: kund → utkast+moms → skicka med obruten serie + oföränderlig. Validera grönt.
+**Checkpoint ✅ (MVP)**: kund → utkast+moms → skicka med obruten serie + oföränderlig + betalstatus.
+`dotnet test` = 74 gröna (44 domän + 30 API). Kvar: US5 kreditfaktura, US6 PDF, frontend.
 
 ## Phase 6: US4 — Betalstatus (P2)
 

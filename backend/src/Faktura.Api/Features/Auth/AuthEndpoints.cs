@@ -64,6 +64,10 @@ public static class AuthEndpoints
         "seat_limit" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Platsgräns nådd"),
         "last_owner" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Sista Owner"),
         "invitation_invalid" => Results.Problem(error.Message, statusCode: StatusCodes.Status410Gone, title: "Ogiltig inbjudan"),
+        "invoice_locked" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Fakturan är låst"),
+        "empty_invoice" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Tom faktura"),
+        "invalid_state" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Ogiltig status"),
+        "over_credit" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Överkreditering"),
         _ => Results.Problem(error.Message, statusCode: StatusCodes.Status400BadRequest, title: "Valideringsfel")
     };
 }

@@ -10,24 +10,24 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 
 ## Phase 1: Setup (delad grund)
 
-- [ ] T001 Skapa `backend/Faktura.sln` + projekt `Faktura.Api`, `Faktura.Domain`, `Faktura.Infrastructure` (src/) och `Faktura.Domain.Tests`, `Faktura.Api.Tests` (tests/) med projektreferenser per plan.md
-- [ ] T002 [P] Lägg NuGet-beroenden: Api (JwtBearer, RateLimiting, Stripe.net), Infrastructure (MongoDB.Driver, Stripe.net), Tests (xUnit, FluentAssertions, Testcontainers/Mongo2Go, Microsoft.AspNetCore.Mvc.Testing)
+- [x] T001 Skapa `backend/Faktura.slnx` + projekt `Faktura.Api`, `Faktura.Domain`, `Faktura.Infrastructure` (src/) och `Faktura.Domain.Tests`, `Faktura.Api.Tests` (tests/) med projektreferenser per plan.md
+- [x] T002 [P] Lägg NuGet-beroenden: Api (JwtBearer), Infrastructure (MongoDB.Driver, Stripe.net, System.IdentityModel.Tokens.Jwt), Tests (xUnit, Mvc.Testing). (xUnit-asserts i st. f. FluentAssertions pga licens; egen PBKDF2 i st. f. Identity)
 - [ ] T003 [P] Scaffolda `frontend/` (Vite + React 19 + TS + react-router-dom + @tanstack/react-query), eslint, vitest; `theme/`-tokens
 - [ ] T004 [P] `backend/Dockerfile` (för Render) + `.env.example`/`appsettings.example.json` (utan hemligheter)
-- [ ] T005 Verifiera att `ci.yml` blir grön med tomma projekt (build/test/lint passerar)
+- [x] T005 Verifiera att `ci.yml` blir grön (backend byggs/testas; detektering via `find` för `.slnx`)
 
 ---
 
 ## Phase 2: Foundational (BLOCKERAR alla user stories)
 
-- [ ] T006 [P] [Domain] Entiteter: `Organization`, `User`, `Role` (enum owner/admin/member), `Invitation`, `Subscription`-värdetyp i `Faktura.Domain` per data-model.md
-- [ ] T007 [P] [Domain] Abstraktioner: `ITenantContext`, `IClock`, repository-interfaces (`IOrganizationRepository`, `IUserRepository`, `IInvitationRepository`, `IRefreshTokenRepository`), `IPasswordHasher`, `ITokenService`, `Result`/`Error`-typer
-- [ ] T008 [Infra] `MongoContext` (collections + index från data-model.md, inkl. unika/TTL-index) + DI-registrering; konfiguration `Mongo__*`
-- [ ] T009 [Infra] `TenantScopedRepository<T>`-bas som tvingar `tenantId`-filter i find/update/delete och sätter `tenantId` vid insert (kärnan i FR-007/008)
-- [ ] T010 [P] [Infra] `JwtTokenService` (access-JWT med claims sub/tenantId/role/email; refresh-token-hash) + `PasswordHasher` (PBKDF2)
-- [ ] T011 [Api] `Program.cs`: JwtBearer-auth, authorization-policies (roller), CORS, problem+json-felhanterare (RFC7807), DI-wiring
-- [ ] T012 [Api] Tenant-resolution-middleware: sätter `ITenantContext` **enbart** från JWT-claim (aldrig request-body)
-- [ ] T013 [P] [Infra] `planDefinitions`-seed (Free: 2 seats + låg kvot, Pro: 25 + hög) — datadriven plan-config (FR-019)
+- [x] T006 [P] [Domain] Entiteter: `Organization`, `User`, `UserRole` (owner/admin/member), `RefreshTokenRecord`, plan-värdetyper i `Faktura.Domain`. (`Invitation` = US3)
+- [x] T007 [P] [Domain] Abstraktioner: `ITenantContext`, `IClock`, `IIdGenerator`, repository-interfaces (`IOrganizationRepository`, `IUserRepository`, `IRefreshTokenRepository`), `IPasswordHasher`, `ITokenService`, `IPlanCatalog`, `Result`/`Error`. (`IInvitationRepository` = US3)
+- [x] T008 [Infra] `MongoContext` (collections + unika/TTL-index) + DI; konfiguration `Mongo__*`
+- [~] T009 [Infra] Tenant-filter tvingas i repo-metoderna (`GetByIdAsync(tenantId, …)`); generisk `TenantScopedRepository<T>`-bas färdigställs i US2 när fler collections finns
+- [x] T010 [P] [Infra] `JwtTokenService` (access-JWT med claims sub/tenantId/role/email; refresh-token-hash) + `Pbkdf2PasswordHasher`
+- [x] T011 [Api] `Program.cs`: JwtBearer-auth (via IOptions), authorization, CORS, problem+json (RFC7807), DI-wiring
+- [x] T012 [Api] `HttpTenantContext`: härleder tenant/roll **enbart** från JWT-claim (aldrig request-body)
+- [x] T013 [P] [Infra] Datadriven plan-config (`PlanOptions`/`PlanCatalog`, Free 2 / Pro 25) — FR-019
 
 **Checkpoint**: grund klar — user stories kan börja.
 
@@ -36,16 +36,16 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 ## Phase 3: US1 — Registrera organisation + login (P1) 🎯 MVP
 
 **Tester först:**
-- [ ] T014 [P] [US1] Domäntester: org+owner skapas korrekt, lösenordspolicy, owner-roll sätts (`Faktura.Domain.Tests`)
-- [ ] T015 [P] [US1] Integrationstester: `POST /api/auth/register` (201, 409 e-postkonflikt utan läckage, 422 svagt lösenord), `POST /api/auth/login` (200/401), `POST /api/auth/refresh`, `/api/me` (`Faktura.Api.Tests`)
+- [x] T014 [P] [US1] Domäntester: org+owner skapas korrekt, lösenordspolicy, e-postnormalisering, owner-roll (17 tester gröna)
+- [x] T015 [P] [US1] Integrationstester: `register` (201, 409 utan läckage, 422 svagt lösenord), `login` (200/401), `refresh` (rotation + återanvändning nekas), `/api/me` (401 utan token, 200 med) — 8 tester gröna
 
 **Implementation:**
-- [ ] T016 [US1] Domän: registrerings-/inloggningsregler (skapa org+owner, verifiera lösenord) — få T014 grön
-- [ ] T017 [US1] Infra: `OrganizationRepository`, `UserRepository`, `RefreshTokenRepository`
-- [ ] T018 [US1] Api: endpoints `register`/`login`/`refresh`/`logout`/`me` per kontrakt — få T015 grön
-- [ ] T019 [US1] Säkerhet: broms vid upprepade misslyckade inloggningar (FR-023), säkerhetsloggning utan hemligheter (FR-024)
+- [x] T016 [US1] Domän: `AccountRegistration` (skapa org+owner), `PasswordPolicy`, `EmailAddress`, login-verifiering — T014 grön
+- [x] T017 [US1] Infra: `MongoOrganizationRepository`, `MongoUserRepository`, `MongoRefreshTokenRepository`
+- [x] T018 [US1] Api: `AuthService` + endpoints `register`/`login`/`refresh`/`logout`/`me` per kontrakt — T015 grön
+- [ ] T019 [US1] Säkerhet: broms vid upprepade misslyckade inloggningar (FR-023), säkerhetsloggning (FR-024) — kvar
 
-**Checkpoint**: en användare kan registrera org, logga in, förnya token.
+**Checkpoint ✅ (MVP)**: en användare kan registrera org, logga in, förnya token, hämta `/api/me`. `dotnet test` = 25 gröna. Kvar i US1: T019 (härdning).
 
 ---
 

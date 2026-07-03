@@ -26,7 +26,7 @@ jobs:
       - name: Hitta .NET-lösning
         id: detect
         run: |
-          if ls backend/*.sln backend/**/*.csproj >/dev/null 2>&1; then
+          if [ -n "$(find backend -name '*.csproj' 2>/dev/null | head -1)" ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"

@@ -1,9 +1,12 @@
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using Faktura.Api.Auth;
 using Faktura.Api.Features.Auth;
 using Faktura.Api.Features.Billing;
 using Faktura.Api.Features.Members;
 using Faktura.Domain.Abstractions;
+using Faktura.Domain.Organizations;
 using Faktura.Infrastructure;
 using Faktura.Infrastructure.Persistence;
 using Faktura.Infrastructure.Security;
@@ -51,6 +54,39 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// Rate limiting per tenant: partition by tenantId, quota from the tenant's plan config.
+// Anonymous requests are not tenant-limited here (login abuse is handled by the login throttle).
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var user = context.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var tenantId = user.FindFirstValue(FakturaClaims.TenantId) ?? "unknown";
+            var catalog = context.RequestServices.GetRequiredService<IPlanCatalog>();
+            var plan = Enum.TryParse<PlanTier>(user.FindFirstValue(FakturaClaims.Plan), out var p) ? p : PlanTier.Free;
+            var def = catalog.Get(plan);
+            return RateLimitPartition.GetFixedWindowLimiter($"tenant:{tenantId}", _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = def.RateLimitPermitLimit,
+                Window = TimeSpan.FromSeconds(def.RateLimitWindowSeconds),
+                QueueLimit = 0
+            });
+        }
+        return RateLimitPartition.GetNoLimiter("anon");
+    });
+    options.OnRejected = async (context, ct) =>
+    {
+        var retry = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var ra) ? (int)ra.TotalSeconds : 60;
+        context.HttpContext.Response.Headers.RetryAfter = retry.ToString();
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { title = "För många anrop", status = 429, retryAfterSeconds = retry }, ct);
+    };
+});
+
 var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddCors(options => options.AddPolicy("spa", policy =>
@@ -66,6 +102,7 @@ app.UseExceptionHandler();
 app.UseCors("spa");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapAuthEndpoints();
 app.MapMembersEndpoints();

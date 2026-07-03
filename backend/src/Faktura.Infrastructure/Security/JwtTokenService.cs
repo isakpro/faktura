@@ -15,6 +15,7 @@ public static class FakturaClaims
 {
     public const string TenantId = "tenantId";
     public const string Role = "role";
+    public const string Plan = "plan";
 }
 
 /// <summary>Issues HS256 access tokens and opaque, hashed refresh tokens.</summary>
@@ -43,6 +44,7 @@ public sealed class JwtTokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(FakturaClaims.TenantId, organization.Id),
             new Claim(FakturaClaims.Role, user.Role.ToString()),
+            new Claim(FakturaClaims.Plan, organization.Plan.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 

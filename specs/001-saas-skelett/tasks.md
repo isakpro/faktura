@@ -96,12 +96,12 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 ## Phase 7: US5 — Rate limiting per tenant (P3)
 
 **Tester först:**
-- [ ] T034 [P] [US5] Integrationstester: A över kvot → 429 + `Retry-After`; B opåverkad samtidigt; Pro-kvot ≥ Free (SC-005)
+- [x] T034 [P] [US5] Integrationstest: A över kvot → 429 + `Retry-After`; B (egen partition) opåverkad (SC-005)
 
 **Implementation:**
-- [ ] T035 [US5] Api: rate limiting partitionerad på `tenantId` (fallback IP), kvot från plan-config; 429 + `Retry-After` — få T034 grön
+- [x] T035 [US5] Api: `AddRateLimiter` partitionerad på `tenantId` (anonymt = no-limit; login-broms täcker auth), kvot ur plan-config (`plan`-claim i JWT); 429 + `Retry-After` — T034 grön
 
-**Checkpoint**: rättvis per-tenant-begränsning.
+**Checkpoint ✅**: rättvis per-tenant-begränsning.
 
 ---
 

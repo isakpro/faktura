@@ -22,6 +22,10 @@ Aktiv feature: **001 — SaaS-skelett** (tenancy + auth + roller + plan/Stripe +
 - Design: [research.md](specs/001-saas-skelett/research.md) · [data-model.md](specs/001-saas-skelett/data-model.md) · [contracts/rest-api.md](specs/001-saas-skelett/contracts/rest-api.md) · [quickstart.md](specs/001-saas-skelett/quickstart.md)
 Clarify klar (2026-06-28): self-service onboarding, JWT-claim-routing, Free/Pro = seats + rate-limit, ingen e-postverifiering i v1.
 Plan klar: .NET 10 clean architecture (Api/Domain/Infrastructure) + React/Vite, JWT access+refresh, TenantScopedRepository, inbyggd rate limiting per tenant, Stripe.net webhooks.
-Tasks klara: [tasks.md](specs/001-saas-skelett/tasks.md) (T001–T040, TDD-ordnat per US, 8 faser).
-Nästa steg: `/speckit-implement` (bygg, TDD — börja Phase 1–2 + US1 som MVP). Fakturadomänen = spec 002.
+**Implementerat** (feature/001-saas-skelett): backend US1–US5 (registrering/login/refresh/me,
+tenant-isolering, roller/inbjudningar/seat, Stripe-plan/webhooks, rate limiting per tenant) +
+React/Vite-frontend. `dotnet test` = 58 gröna (35 domän + 23 API). Kod i `backend/` (Api/Domain/
+Infrastructure + tester) och `frontend/`.
+Kända uppföljningar: member-borttagning (DELETE /api/members/{id}), frontend-tester, e-post-
+enumerering vid register. Nästa: PR till `develop`; fakturadomänen = spec 002.
 <!-- SPECKIT END -->

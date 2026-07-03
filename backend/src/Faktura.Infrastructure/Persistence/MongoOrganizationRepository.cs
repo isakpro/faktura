@@ -22,6 +22,14 @@ internal sealed class MongoOrganizationRepository : IOrganizationRepository
         return doc?.ToDomain();
     }
 
+    public async Task<Organization?> GetByStripeCustomerAsync(string customerId, CancellationToken ct = default)
+    {
+        var doc = await _context.Organizations
+            .Find(o => o.StripeCustomerId == customerId)
+            .FirstOrDefaultAsync(ct);
+        return doc?.ToDomain();
+    }
+
     public Task UpdateAsync(Organization organization, CancellationToken ct = default)
         => _context.Organizations.ReplaceOneAsync(
             o => o.Id == organization.Id,

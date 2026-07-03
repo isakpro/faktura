@@ -1,6 +1,7 @@
 using System.Text;
 using Faktura.Api.Auth;
 using Faktura.Api.Features.Auth;
+using Faktura.Api.Features.Billing;
 using Faktura.Api.Features.Members;
 using Faktura.Domain.Abstractions;
 using Faktura.Infrastructure;
@@ -19,6 +20,7 @@ builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<TokenIssuer>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MemberService>();
+builder.Services.AddScoped<BillingService>();
 builder.Services.AddProblemDetails();
 
 builder.Services
@@ -67,6 +69,7 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapMembersEndpoints();
+app.MapBillingEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

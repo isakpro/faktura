@@ -1,5 +1,6 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
+using Faktura.Infrastructure.Billing;
 using Faktura.Infrastructure.Common;
 using Faktura.Infrastructure.Configuration;
 using Faktura.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.SectionName));
         services.Configure<PlanOptions>(config.GetSection(PlanOptions.SectionName));
         services.Configure<ThrottleOptions>(config.GetSection(ThrottleOptions.SectionName));
+        services.Configure<StripeOptions>(config.GetSection(StripeOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, ObjectIdGenerator>();
@@ -31,6 +33,10 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IRefreshTokenRepository, MongoRefreshTokenRepository>();
         services.AddScoped<IInvitationRepository, MongoInvitationRepository>();
+        services.AddScoped<IProcessedEventStore, MongoProcessedEventStore>();
+
+        services.AddSingleton<IBillingGateway, StripeBillingGateway>();
+        services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();
 
         // Pure domain service composed of the abstractions above.
         services.AddScoped<AccountRegistration>();

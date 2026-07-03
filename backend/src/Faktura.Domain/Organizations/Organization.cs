@@ -51,4 +51,25 @@ public sealed class Organization
             stripeSubscriptionId: null,
             seatLimit: freeSeatLimit,
             createdAt: now);
+
+    /// <summary>Links the organization to its Stripe customer (set at first checkout).</summary>
+    public void AttachStripeCustomer(string customerId) => StripeCustomerId = customerId;
+
+    /// <summary>Activates the Pro plan (from a verified checkout/subscription webhook).</summary>
+    public void ActivatePro(string subscriptionId, int proSeatLimit)
+    {
+        Plan = PlanTier.Pro;
+        SubscriptionStatus = SubscriptionStatus.Active;
+        StripeSubscriptionId = subscriptionId;
+        SeatLimit = proSeatLimit;
+    }
+
+    /// <summary>Downgrades to Free when the subscription is canceled/ended.</summary>
+    public void CancelToFree(int freeSeatLimit)
+    {
+        Plan = PlanTier.Free;
+        SubscriptionStatus = SubscriptionStatus.Canceled;
+        StripeSubscriptionId = null;
+        SeatLimit = freeSeatLimit;
+    }
 }

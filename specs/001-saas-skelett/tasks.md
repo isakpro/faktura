@@ -81,15 +81,15 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 ## Phase 6: US4 — Plan/Stripe (testläge) (P2)
 
 **Tester först:**
-- [ ] T029 [P] [US4] Domän-/tjänstetester: plan-gating datadrivet, nedgradering vid canceled, endast Owner ändrar plan
-- [ ] T030 [P] [US4] Integrationstester: webhook **signaturverifiering** (400 vid fel), **idempotens** (samma event-id en gång), `checkout.session.completed`→pro, `subscription.deleted`→nedgradering (SC-004/SC-006)
+- [x] T029 [P] [US4] Domäntester: `Organization.ActivatePro`/`CancelToFree` (plan/status/seat/subscription)
+- [x] T030 [P] [US4] Integrationstester: signatur ogiltig → 400, idempotens (re-levererat evt återaktiverar ej), aktivera → Pro, avsluta → Free, non-owner → 403 (SC-004/SC-006)
 
 **Implementation:**
-- [ ] T031 [US4] Infra: `StripeClient`-wrapper (Checkout Session) + webhook-signaturverifiering + `processedStripeEvents`-idempotens
-- [ ] T032 [US4] Domän/tjänst: plan-statusövergångar + gating mot plan-config — få T029 grön
-- [ ] T033 [US4] Api: `billing` (GET, checkout) + `billing/webhook` per kontrakt — få T030 grön
+- [x] T031 [US4] Infra: `StripeBillingGateway` (Checkout Session) + `StripeWebhookEventParser` (EventUtility-signatur) + `MongoProcessedEventStore` (unik event-id)
+- [x] T032 [US4] Domän/tjänst: `BillingService` + plan-övergångar mot plan-config — T029 grön
+- [x] T033 [US4] Api: `billing` (GET, checkout) + `billing/webhook` (rå body + signatur) per kontrakt — T030 grön
 
-**Checkpoint**: Owner kan uppgradera till Pro i testläge; status driven av verifierade webhooks.
+**Checkpoint ✅**: Owner kan starta Pro-checkout (testläge); status driven av verifierade, idempotenta webhooks.
 
 ---
 

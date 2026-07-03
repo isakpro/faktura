@@ -85,6 +85,9 @@ public sealed class InMemoryOrganizationRepository : IOrganizationRepository
     public Task<Organization?> GetByIdAsync(string tenantId, CancellationToken ct = default)
         => Task.FromResult(_orgs.GetValueOrDefault(tenantId));
 
+    public Task<Organization?> GetByStripeCustomerAsync(string customerId, CancellationToken ct = default)
+        => Task.FromResult(_orgs.Values.FirstOrDefault(o => o.StripeCustomerId == customerId));
+
     public Task UpdateAsync(Organization organization, CancellationToken ct = default)
     {
         _orgs[organization.Id] = organization;

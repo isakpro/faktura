@@ -23,4 +23,7 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
     public static Error SeatLimitReached() => new("seat_limit", "Plangränsen för antal användare är nådd. Uppgradera till Pro.");
     public static Error LastOwner() => new("last_owner", "Organisationen måste ha minst en Owner.");
     public static Error InvitationInvalid() => new("invitation_invalid", "Inbjudan är ogiltig eller har gått ut.");
+
+    // Billing (US4).
+    public static Error InvalidSignature() => new("invalid_signature", "Webhook-signaturen kunde inte verifieras.");
 }

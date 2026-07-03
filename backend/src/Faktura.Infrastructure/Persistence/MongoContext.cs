@@ -23,10 +23,16 @@ public sealed class MongoContext
     internal IMongoCollection<UserDocument> Users => _database.GetCollection<UserDocument>("users");
     internal IMongoCollection<RefreshTokenDocument> RefreshTokens => _database.GetCollection<RefreshTokenDocument>("refreshTokens");
     internal IMongoCollection<InvitationDocument> Invitations => _database.GetCollection<InvitationDocument>("invitations");
+    internal IMongoCollection<ProcessedEventDocument> ProcessedEvents => _database.GetCollection<ProcessedEventDocument>("processedStripeEvents");
 
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
     {
+        await Organizations.Indexes.CreateOneAsync(
+            new CreateIndexModel<OrganizationDocument>(
+                Builders<OrganizationDocument>.IndexKeys.Ascending(o => o.StripeCustomerId),
+                new CreateIndexOptions { Name = "ix_org_stripe_customer", Sparse = true }), cancellationToken: ct);
+
         await Users.Indexes.CreateManyAsync(new[]
         {
             new CreateIndexModel<UserDocument>(

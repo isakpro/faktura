@@ -23,9 +23,12 @@ webhooks, rate limiting per tenant) + React/Vite-frontend. 58 tester gröna. Kod
 (DELETE /api/members/{id}), frontend-tester, e-post-enumerering vid register.
 
 Aktiv feature: **002 — Fakturadomänen** (kunder, fakturor, moms, status, kreditfaktura, PDF).
+- Plan (läs först): [specs/002-fakturadoman/plan.md](specs/002-fakturadoman/plan.md)
 - Spec: [specs/002-fakturadoman/spec.md](specs/002-fakturadoman/spec.md)
-- Checklista: [specs/002-fakturadoman/checklists/requirements.md](specs/002-fakturadoman/checklists/requirements.md)
+- Design: [research.md](specs/002-fakturadoman/research.md) · [data-model.md](specs/002-fakturadoman/data-model.md) · [contracts/rest-api.md](specs/002-fakturadoman/contracts/rest-api.md) · [quickstart.md](specs/002-fakturadoman/quickstart.md)
 Clarify klar (2026-07-03): moms per rad (svenska satser, exkl. moms), löpande obruten fakturaserie
 per tenant vid skick, server-side PDF (QuestPDF), statusflöde Utkast→Skickad(låst)→Betald/Förfallen
-+ kreditfaktura, betald markeras manuellt. Bygger på 001. Nästa steg: `/speckit-plan`.
++ kreditfaktura, betald markeras manuellt.
+Plan klar: bygger på 001 (TenantScopedRepository/JWT), decimal+öresavrundning, atomisk
+`invoiceCounters` ($inc), QuestPDF bakom interface. Nästa steg: `/speckit-tasks` → implement (MVP US1–US3).
 <!-- SPECKIT END -->

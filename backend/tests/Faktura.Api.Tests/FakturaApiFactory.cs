@@ -42,10 +42,12 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IUserRepository>();
             services.RemoveAll<IOrganizationRepository>();
             services.RemoveAll<IRefreshTokenRepository>();
+            services.RemoveAll<IInvitationRepository>();
 
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IOrganizationRepository, InMemoryOrganizationRepository>();
             services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
+            services.AddSingleton<IInvitationRepository, InMemoryInvitationRepository>();
         });
     }
 }

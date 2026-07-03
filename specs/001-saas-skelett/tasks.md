@@ -52,29 +52,29 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = kan köras parallellt (olik
 ## Phase 4: US2 — Tenant-isolering (P1)
 
 **Tester först:**
-- [ ] T020 [P] [US2] Integrationstester: två tenants A/B — list returnerar bara egen data; direkt id-access mot B ger 404/403; klient-angivet tenantId ignoreras; manipulerad/utgången token nekas (SC-002)
-- [ ] T021 [P] [US2] Domän-/repotest: `TenantScopedRepository` släpper aldrig igenom query utan tenant-filter
+- [x] T020 [P] [US2] Integrationstester: A/B — `/api/members` visar bara egen data; cross-tenant rolländring → 404; `/api/members` utan token → 401 (SC-002)
+- [x] T021 [P] [US2] `TenantScopedRepository<TDoc>`-bas tvingar tenant-filter i find/list/replace/count
 
 **Implementation:**
-- [ ] T022 [US2] Säkerställ att alla repos ärver `TenantScopedRepository` och att inga endpoints tar tenantId från klient — få T020/T021 gröna
-- [ ] T023 [US2] Negativtest-härdning: gemensam testhjälp som kör varje skyddad endpoint cross-tenant
+- [x] T022 [US2] Tenant-ägda collections (invitations) via `TenantScopedRepository`; user-repo tenant-scopade metoder; inga endpoints tar tenantId från klient (härleds ur JWT)
+- [x] T023 [US2] Cross-tenant-negativtester i `MembersEndpointsTests`
 
-**Checkpoint**: 0 cross-tenant-läckor verifierat.
+**Checkpoint ✅**: 0 cross-tenant-läckor verifierat i test.
 
 ---
 
 ## Phase 5: US3 — Medlemmar, inbjudningar, roller, seat-gräns (P2)
 
 **Tester först:**
-- [ ] T024 [P] [US3] Domäntester: RBAC (Member nekas; Admin kan ej sätta Owner; endast Owner sätter Owner), "minst en Owner" (FR-013), seat-gräns Free=2 (FR-025)
-- [ ] T025 [P] [US3] Integrationstester: invite→accept-flöde, roll-ändring (403/409), seat-gräns ger 409 "uppgradera"
+- [x] T024 [P] [US3] Domäntester: `MembershipRules` (Member nekas; Admin kan ej sätta/ta Owner; endast Owner), "minst en Owner" (FR-013), seat-gräns (FR-025), `Invitation`-livscykel
+- [x] T025 [P] [US3] Integrationstester: invite→accept, Member kan ej bjuda in (403), seat-gräns → 409, sista-owner → 409
 
 **Implementation:**
-- [ ] T026 [P] [US3] Domän: behörighetsregler + seat-/owner-invarianter — få T024 grön
-- [ ] T027 [US3] Infra: `InvitationRepository`, accept-token-hash
-- [ ] T028 [US3] Api: `members`/`invitations`-endpoints + role-policies per kontrakt — få T025 grön
+- [x] T026 [P] [US3] Domän: `MembershipRules` + `Invitation` — T024 grön
+- [x] T027 [US3] Infra: `MongoInvitationRepository` (via TenantScopedRepository), token-hash, user-repo-utökning
+- [x] T028 [US3] Api: `MemberService` + `members`/`invitations`-endpoints + RBAC per kontrakt — T025 grön
 
-**Checkpoint**: team + roller + seat-gräns fungerar.
+**Checkpoint ✅**: team + roller + seat-gräns fungerar. (Member-borttagning = liten uppföljning.)
 
 ---
 

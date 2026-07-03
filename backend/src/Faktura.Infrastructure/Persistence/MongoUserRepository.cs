@@ -32,6 +32,23 @@ internal sealed class MongoUserRepository : IUserRepository
     public async Task<int> CountByTenantAsync(string tenantId, CancellationToken ct = default)
         => (int)await _context.Users.CountDocumentsAsync(u => u.TenantId == tenantId, cancellationToken: ct);
 
+    public async Task<int> CountOwnersAsync(string tenantId, CancellationToken ct = default)
+        => (int)await _context.Users.CountDocumentsAsync(
+            u => u.TenantId == tenantId && u.Role == UserRole.Owner, cancellationToken: ct);
+
+    public async Task<IReadOnlyList<User>> ListByTenantAsync(string tenantId, CancellationToken ct = default)
+    {
+        var docs = await _context.Users.Find(u => u.TenantId == tenantId).ToListAsync(ct);
+        return docs.Select(d => d.ToDomain()).ToList();
+    }
+
     public Task AddAsync(User user, CancellationToken ct = default)
         => _context.Users.InsertOneAsync(UserDocument.FromDomain(user), cancellationToken: ct);
+
+    // Tenant-scoped update: both id and tenant must match, so a cross-tenant update cannot occur.
+    public Task UpdateAsync(User user, CancellationToken ct = default)
+        => _context.Users.ReplaceOneAsync(
+            u => u.Id == user.Id && u.TenantId == user.TenantId,
+            UserDocument.FromDomain(user),
+            cancellationToken: ct);
 }

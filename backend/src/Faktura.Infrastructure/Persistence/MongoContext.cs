@@ -22,6 +22,7 @@ public sealed class MongoContext
     internal IMongoCollection<OrganizationDocument> Organizations => _database.GetCollection<OrganizationDocument>("organizations");
     internal IMongoCollection<UserDocument> Users => _database.GetCollection<UserDocument>("users");
     internal IMongoCollection<RefreshTokenDocument> RefreshTokens => _database.GetCollection<RefreshTokenDocument>("refreshTokens");
+    internal IMongoCollection<InvitationDocument> Invitations => _database.GetCollection<InvitationDocument>("invitations");
 
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
@@ -44,6 +45,16 @@ public sealed class MongoContext
             new CreateIndexModel<RefreshTokenDocument>(
                 Builders<RefreshTokenDocument>.IndexKeys.Ascending(r => r.ExpiresAt),
                 new CreateIndexOptions { Name = "ttl_refresh_expires", ExpireAfter = TimeSpan.Zero })
+        }, ct);
+
+        await Invitations.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<InvitationDocument>(
+                Builders<InvitationDocument>.IndexKeys.Ascending(i => i.TenantId).Ascending(i => i.Email),
+                new CreateIndexOptions { Name = "ix_invitation_tenant_email" }),
+            new CreateIndexModel<InvitationDocument>(
+                Builders<InvitationDocument>.IndexKeys.Ascending(i => i.TokenHash),
+                new CreateIndexOptions { Unique = true, Name = "ux_invitation_token" })
         }, ct);
     }
 }

@@ -16,5 +16,13 @@ public interface IUserRepository
     /// <summary>Count of active users in a tenant (for seat-limit checks in US3).</summary>
     Task<int> CountByTenantAsync(string tenantId, CancellationToken ct = default);
 
+    /// <summary>Count of Owners in a tenant (for the "at least one Owner" invariant).</summary>
+    Task<int> CountOwnersAsync(string tenantId, CancellationToken ct = default);
+
+    /// <summary>Tenant-scoped list of all users in the organization.</summary>
+    Task<IReadOnlyList<User>> ListByTenantAsync(string tenantId, CancellationToken ct = default);
+
     Task AddAsync(User user, CancellationToken ct = default);
+
+    Task UpdateAsync(User user, CancellationToken ct = default);
 }

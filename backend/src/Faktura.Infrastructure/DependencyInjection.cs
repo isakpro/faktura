@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationRepository, MongoOrganizationRepository>();
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IRefreshTokenRepository, MongoRefreshTokenRepository>();
+        services.AddScoped<IInvitationRepository, MongoInvitationRepository>();
 
         // Pure domain service composed of the abstractions above.
         services.AddScoped<AccountRegistration>();

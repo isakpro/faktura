@@ -16,4 +16,11 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
     public static Error WeakPassword(string message) => new("weak_password", message);
     public static Error TooManyAttempts(int retryAfterSeconds) =>
         new("too_many_attempts", "För många inloggningsförsök. Försök igen senare.", retryAfterSeconds);
+
+    // Members / roles / plan (US3).
+    public static Error Forbidden() => new("forbidden", "Otillräcklig behörighet för åtgärden.");
+    public static Error NotFound() => new("not_found", "Resursen hittades inte.");
+    public static Error SeatLimitReached() => new("seat_limit", "Plangränsen för antal användare är nådd. Uppgradera till Pro.");
+    public static Error LastOwner() => new("last_owner", "Organisationen måste ha minst en Owner.");
+    public static Error InvitationInvalid() => new("invitation_invalid", "Inbjudan är ogiltig eller har gått ut.");
 }

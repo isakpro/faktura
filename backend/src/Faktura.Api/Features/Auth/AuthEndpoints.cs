@@ -46,7 +46,7 @@ public static class AuthEndpoints
             if (user is null || org is null)
                 return Results.Problem("Kontot kunde inte hittas.", statusCode: StatusCodes.Status404NotFound);
 
-            return Results.Ok(new MeResponse(AuthService.Map(user), AuthService.Map(org)));
+            return Results.Ok(new MeResponse(user.ToDto(), org.ToDto()));
         }).RequireAuthorization();
 
         return app;
@@ -59,6 +59,11 @@ public static class AuthEndpoints
         "email_in_use" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "E-post upptagen"),
         "invalid_credentials" => Results.Problem(error.Message, statusCode: StatusCodes.Status401Unauthorized, title: "Ogiltiga uppgifter"),
         "too_many_attempts" => new RetryAfterProblem(error.RetryAfterSeconds ?? 60, error.Message),
+        "forbidden" => Results.Problem(error.Message, statusCode: StatusCodes.Status403Forbidden, title: "Otillåtet"),
+        "not_found" => Results.Problem(error.Message, statusCode: StatusCodes.Status404NotFound, title: "Hittades inte"),
+        "seat_limit" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Platsgräns nådd"),
+        "last_owner" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Sista Owner"),
+        "invitation_invalid" => Results.Problem(error.Message, statusCode: StatusCodes.Status410Gone, title: "Ogiltig inbjudan"),
         _ => Results.Problem(error.Message, statusCode: StatusCodes.Status400BadRequest, title: "Valideringsfel")
     };
 }

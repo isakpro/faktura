@@ -1,17 +1,13 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Domain.Common;
-using Faktura.Domain.Organizations;
-using Faktura.Domain.Users;
-using Faktura.Infrastructure.Security;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Faktura.Api.Features.Auth;
 
 /// <summary>
 /// Application service orchestrating registration, login, token refresh and logout.
-/// Composes the pure domain logic with repositories and the token service.
+/// Composes the pure domain logic with repositories and token issuance.
 /// </summary>
 public sealed class AuthService
 {
@@ -21,11 +17,10 @@ public sealed class AuthService
     private readonly AccountRegistration _registration;
     private readonly ITokenService _tokens;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IIdGenerator _ids;
     private readonly IClock _clock;
     private readonly ILoginThrottle _throttle;
+    private readonly TokenIssuer _issuer;
     private readonly ILogger<AuthService> _logger;
-    private readonly JwtOptions _jwt;
 
     public AuthService(
         IUserRepository users,
@@ -34,11 +29,10 @@ public sealed class AuthService
         AccountRegistration registration,
         ITokenService tokens,
         IPasswordHasher passwordHasher,
-        IIdGenerator ids,
         IClock clock,
         ILoginThrottle throttle,
-        ILogger<AuthService> logger,
-        IOptions<JwtOptions> jwt)
+        TokenIssuer issuer,
+        ILogger<AuthService> logger)
     {
         _users = users;
         _organizations = organizations;
@@ -46,11 +40,10 @@ public sealed class AuthService
         _registration = registration;
         _tokens = tokens;
         _passwordHasher = passwordHasher;
-        _ids = ids;
         _clock = clock;
         _throttle = throttle;
+        _issuer = issuer;
         _logger = logger;
-        _jwt = jwt.Value;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken ct)
@@ -69,8 +62,7 @@ public sealed class AuthService
         await _users.AddAsync(owner, ct);
 
         _logger.LogInformation("Organization {TenantId} registered with owner {UserId}", organization.Id, owner.Id);
-        var response = await IssueTokensAsync(owner, organization, ct);
-        return Result.Success(response);
+        return Result.Success(await _issuer.IssueAsync(owner, organization, ct));
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken ct)
@@ -100,8 +92,7 @@ public sealed class AuthService
 
         _throttle.Reset(key);
         _logger.LogInformation("User {UserId} logged in (tenant {TenantId})", user.Id, organization.Id);
-        var response = await IssueTokensAsync(user, organization, ct);
-        return Result.Success(response);
+        return Result.Success(await _issuer.IssueAsync(user, organization, ct));
     }
 
     public async Task<Result<TokenResponse>> RefreshAsync(string rawRefreshToken, CancellationToken ct)
@@ -124,9 +115,7 @@ public sealed class AuthService
         record.Revoke(now);
         await _refreshTokens.UpdateAsync(record, ct);
 
-        var access = _tokens.CreateAccessToken(user, organization);
-        var refresh = await PersistRefreshTokenAsync(user, ct);
-        return Result.Success(new TokenResponse(access.Token, refresh, access.ExpiresAtUtc));
+        return Result.Success(await _issuer.IssuePairAsync(user, organization, ct));
     }
 
     public async Task LogoutAsync(string rawRefreshToken, CancellationToken ct)
@@ -137,25 +126,4 @@ public sealed class AuthService
         record.Revoke(_clock.UtcNow);
         await _refreshTokens.UpdateAsync(record, ct);
     }
-
-    private async Task<AuthResponse> IssueTokensAsync(User user, Organization organization, CancellationToken ct)
-    {
-        var access = _tokens.CreateAccessToken(user, organization);
-        var refresh = await PersistRefreshTokenAsync(user, ct);
-        return new AuthResponse(access.Token, refresh, access.ExpiresAtUtc, Map(user), Map(organization));
-    }
-
-    private async Task<string> PersistRefreshTokenAsync(User user, CancellationToken ct)
-    {
-        var value = _tokens.CreateRefreshToken();
-        var expires = _clock.UtcNow.AddDays(_jwt.RefreshTokenDays);
-        var record = RefreshTokenRecord.Issue(_ids.NewId(), user.TenantId, user.Id, value.Hash, expires);
-        await _refreshTokens.AddAsync(record, ct);
-        return value.Raw;
-    }
-
-    internal static UserDto Map(User u) => new(u.Id, u.Email, u.Role.ToString());
-
-    internal static OrganizationDto Map(Organization o) =>
-        new(o.Id, o.Name, o.Plan.ToString(), o.SubscriptionStatus.ToString(), o.SeatLimit);
 }

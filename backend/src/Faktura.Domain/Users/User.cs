@@ -40,4 +40,7 @@ public sealed class User
     /// <summary>Creates an additional member/admin (used from the invitation flow in US3).</summary>
     public static User CreateMember(string id, string tenantId, string normalizedEmail, string passwordHash, UserRole role, DateTime now)
         => new(id, tenantId, normalizedEmail, passwordHash, role, UserStatus.Active, now);
+
+    /// <summary>Changes the user's role (authorization is enforced by <see cref="MembershipRules"/>).</summary>
+    public void ChangeRole(UserRole role) => Role = role;
 }

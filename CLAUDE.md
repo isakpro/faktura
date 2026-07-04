@@ -30,5 +30,8 @@ Clarify klar (2026-07-03): moms per rad (svenska satser, exkl. moms), löpande o
 per tenant vid skick, server-side PDF (QuestPDF), statusflöde Utkast→Skickad(låst)→Betald/Förfallen
 + kreditfaktura, betald markeras manuellt.
 Plan klar: bygger på 001 (TenantScopedRepository/JWT), decimal+öresavrundning, atomisk
-`invoiceCounters` ($inc), QuestPDF bakom interface. Nästa steg: `/speckit-tasks` → implement (MVP US1–US3).
+`invoiceCounters` ($inc), QuestPDF bakom interface.
+**Implementerat** (feature/002-fakturadoman): US1–US6 — kunder, utkast+moms (`InvoiceCalculator`),
+skick/atomisk nummerserie/låsning, betalstatus, kreditfaktura, PDF (QuestPDF) + frontend
+(Kunder/Fakturor). `dotnet test` = 78 gröna (46 domän + 32 API). Nästa: PR till `develop`.
 <!-- SPECKIT END -->

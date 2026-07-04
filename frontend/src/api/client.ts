@@ -45,3 +45,13 @@ export const api = {
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
 };
+
+/** Öppnar en autentiserad binär resurs (t.ex. PDF) i en ny flik. */
+export async function openAuthed(path: string): Promise<void> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  const res = await fetch(`${BASE_URL}${path}`, { headers });
+  if (!res.ok) throw new ApiError(res.status, `Kunde inte hämta (${res.status})`);
+  const url = URL.createObjectURL(await res.blob());
+  window.open(url, "_blank");
+}

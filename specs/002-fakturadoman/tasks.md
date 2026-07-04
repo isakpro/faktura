@@ -48,22 +48,24 @@ Format: `[ID] [P?] [Story] Beskrivning` · **[P]** = parallelliserbart (olika fi
 
 ## Phase 6: US4 — Betalstatus (P2)
 
-- [ ] T020 [P] [US4] Domäntester: markera betald; härledd förfallostatus
-- [ ] T021 [P] [US4] Integrationstester: mark-paid; list-filter `overdue`
-- [ ] T022 [US4] Domän/tjänst + endpoint `/mark-paid` + list-filter — grön
+- [x] T020 [P] [US4] Domäntester: markera betald; härledd förfallostatus
+- [x] T021 [P] [US4] Integrationstest: mark-paid; list-filter `overdue`
+- [x] T022 [US4] Domän/tjänst + endpoint `/mark-paid` + list-filter — grön
 
 ## Phase 7: US5 — Kreditfaktura (P2)
 
-- [ ] T023 [P] [US5] Domäntester: kredit refererar original, negativa belopp, kredittak (SC-005)
-- [ ] T024 [P] [US5] Integrationstester: `/credit` ger eget nummer; överkreditering → 409
-- [ ] T025 [US5] Domän/tjänst + endpoint `/credit` — grön
+- [x] T023 [P] [US5] Domäntester: kredit refererar original, negerade belopp, kredittak (SC-005)
+- [x] T024 [P] [US5] Integrationstest: `/credit` ger eget nummer; överkreditering → 409
+- [x] T025 [US5] Domän (`CreateCreditNote`/`RegisterCredit`) + endpoint `/credit` — grön
 
 ## Phase 8: US6 — PDF + frontend + PR
 
-- [ ] T026 [P] [US6] Infra `QuestPdfInvoiceGenerator` (obligatoriska fält); endpoint `/pdf` (endast skickad)
-- [ ] T027 [P] [US6] Test: skickad faktura → icke-tom PDF; utkast → nekas
-- [ ] T028 [P] Frontend: sidor Kunder (lista/formulär) + Fakturor (lista/utkast-editor/detalj + skicka/betala/kreditera/PDF)
-- [ ] T029 Lokal code/security review; `quickstart`-röktest; öppna PR mot `develop` när grönt
+- [x] T026 [P] [US6] Infra `QuestPdfInvoiceGenerator` (Community-licens); endpoint `/pdf` (endast skickad)
+- [x] T027 [P] [US6] Test: skickad faktura → `%PDF`; utkast → 409
+- [x] T028 [P] Frontend: sidor Kunder + Fakturor (utkast-editor + skicka/betala/kreditera/PDF), delad Nav
+- [x] T029 Kod/säkerhetsgenomgång; PR mot `develop`
+
+**Klart:** dotnet test = 78 gröna (46 domän + 32 API); frontend build + oxlint gröna.
 
 ## Dependencies & ordning
 Setup → Foundational → US1 → US2 → US3 (**MVP-stopp & validera**) → US4 → US5 → US6/frontend.

@@ -92,6 +92,11 @@ export interface InvoiceDto {
   totals: InvoiceTotalsDto;
 }
 
+export interface ReminderSettingsDto {
+  autoEnabled: boolean;
+  daysAfterDue: number;
+}
+
 export interface InvoiceListItemDto {
   id: string;
   number?: number | null;

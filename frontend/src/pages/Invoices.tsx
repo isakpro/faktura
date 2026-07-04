@@ -43,6 +43,12 @@ export function Invoices() {
     email.mutate({ id, recipient: r.trim() || null });
   }
 
+  const remind = useMutation({
+    mutationFn: (id: string) => api.post(`/api/invoices/${id}/remind`, { recipient: null }),
+    onSuccess: () => setNotice("Betalningspåminnelse skickad."),
+    onError: (err) => setNotice(err instanceof ApiError ? `Kunde inte påminna: ${err.message}` : "Kunde inte påminna."),
+  });
+
   const create = useMutation({
     mutationFn: () => api.post<InvoiceDto>("/api/invoices", { customerId, lines }),
     onSuccess: () => {
@@ -146,6 +152,9 @@ export function Invoices() {
                   )}
                   {inv.number != null && (
                     <Button onClick={() => mailInvoice(inv.id)} style={{ marginLeft: 4, background: tokens.color.surfaceAlt }}>Mejla</Button>
+                  )}
+                  {inv.status === "Overdue" && (
+                    <Button onClick={() => remind.mutate(inv.id)} style={{ marginLeft: 4 }}>Påminn</Button>
                   )}
                 </td>
               </tr>

@@ -39,5 +39,10 @@ Aktiv feature: **004 — Betalningspåminnelser** (påminnelse-mejl för förfal
 Clarify klar (2026-07-04): manuell knapp + automatiskt dagligt jobb (per-org-inställning: på/av,
 standard av, dagar efter förfall standard 7; max EN automatisk påminnelse per faktura), enkel
 upprepningsbar påminnelse (mejl anger nr i ordningen), ingen avgift i v1 (original-PDF bifogas).
-Bygger på 002 (förfallostatus/PDF) + 003 (IEmailSender). Nästa: `/speckit-plan`.
+Bygger på 002 (förfallostatus/PDF) + 003 (IEmailSender).
+**Implementerat** (feature/004-betalningspaminnelser): US1–US3 — `ReminderMailer` (delad kärna),
+`ReminderService` + `POST /invoices/{id}/remind` + `GET /invoices/{id}/reminders`,
+`ReminderJob` + `ReminderBackgroundService` (dagligt, ej i Testing), `GET/PUT /reminder-settings`,
+frontend "Påminn"-knapp + inställningskort. `dotnet test` = 111 gröna (58 domän + 53 API).
+Nästa: PR till `develop`.
 <!-- SPECKIT END -->

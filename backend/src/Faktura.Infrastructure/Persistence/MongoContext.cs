@@ -28,6 +28,8 @@ public sealed class MongoContext
     internal IMongoCollection<InvoiceDocument> Invoices => _database.GetCollection<InvoiceDocument>("invoices");
     internal IMongoCollection<InvoiceCounterDocument> InvoiceCounters => _database.GetCollection<InvoiceCounterDocument>("invoiceCounters");
     internal IMongoCollection<InvoiceEmailDocument> InvoiceEmails => _database.GetCollection<InvoiceEmailDocument>("invoiceEmails");
+    internal IMongoCollection<InvoiceReminderDocument> InvoiceReminders => _database.GetCollection<InvoiceReminderDocument>("invoiceReminders");
+    internal IMongoCollection<ReminderSettingsDocument> ReminderSettings => _database.GetCollection<ReminderSettingsDocument>("reminderSettings");
 
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
@@ -86,5 +88,10 @@ public sealed class MongoContext
             new CreateIndexModel<InvoiceEmailDocument>(
                 Builders<InvoiceEmailDocument>.IndexKeys.Ascending(e => e.TenantId).Ascending(e => e.InvoiceId),
                 new CreateIndexOptions { Name = "ix_invoiceemail_tenant_invoice" }), cancellationToken: ct);
+
+        await InvoiceReminders.Indexes.CreateOneAsync(
+            new CreateIndexModel<InvoiceReminderDocument>(
+                Builders<InvoiceReminderDocument>.IndexKeys.Ascending(r => r.TenantId).Ascending(r => r.InvoiceId),
+                new CreateIndexOptions { Name = "ix_reminder_tenant_invoice" }), cancellationToken: ct);
     }
 }

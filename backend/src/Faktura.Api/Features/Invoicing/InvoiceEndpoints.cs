@@ -43,6 +43,22 @@ public static class InvoiceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
+        group.MapPost("/{id}/credit", async (string id, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.CreditAsync(id, ct);
+            return result.IsSuccess
+                ? Results.Created($"/api/invoices/{result.Value.Id}", result.Value)
+                : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        group.MapGet("/{id}/pdf", async (string id, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.GeneratePdfAsync(id, ct);
+            return result.IsSuccess
+                ? Results.File(result.Value.Bytes, "application/pdf", result.Value.FileName)
+                : AuthEndpoints.ToProblem(result.Error);
+        });
+
         return app;
     }
 }

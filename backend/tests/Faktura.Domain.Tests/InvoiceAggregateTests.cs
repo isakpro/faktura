@@ -71,4 +71,33 @@ public class InvoiceAggregateTests
         inv.MarkPaid(new DateOnly(2026, 2, 1), Now);
         Assert.False(inv.IsOverdue(new DateOnly(2026, 3, 1)));  // betald = ej förfallen
     }
+
+    [Fact]
+    public void CreditNote_negates_lines_and_references_original()
+    {
+        var original = DraftWithLine(); // 1 × 1000 @ 25 % => brutto 1250
+        original.Send(1, Today, Snap(), 30, Now);
+
+        var credit = Invoice.CreateCreditNote("cn-1", original, number: 2, Today, Now);
+
+        Assert.Equal(InvoiceType.CreditNote, credit.Type);
+        Assert.Equal(InvoiceStatus.Sent, credit.Status);
+        Assert.Equal(2, credit.Number);
+        Assert.Equal("i-1", credit.OriginalInvoiceId);
+        Assert.Equal(-1000m, credit.Totals.Net.Amount);   // negerat
+        Assert.Equal(-1250m, credit.Totals.Gross.Amount);
+    }
+
+    [Fact]
+    public void RegisterCredit_prevents_over_crediting()
+    {
+        var original = DraftWithLine(); // brutto 1250
+        original.Send(1, Today, Snap(), 30, Now);
+
+        Assert.True(original.RegisterCredit(1250m, Now).IsSuccess);
+        Assert.Equal(InvoiceStatus.Credited, original.Status);
+
+        // Andra fulla krediteringen ska nekas.
+        Assert.Equal("over_credit", original.RegisterCredit(1m, Now).Error.Code);
+    }
 }

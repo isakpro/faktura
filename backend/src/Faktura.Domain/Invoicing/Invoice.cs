@@ -103,4 +103,31 @@ public sealed class Invoice
         UpdatedAt = now;
         return Result.Success();
     }
+
+    /// <summary>Belopp som återstår att kreditera (brutto minus redan krediterat).</summary>
+    public decimal RemainingCreditable => Totals.Gross.Amount - CreditedAmount;
+
+    /// <summary>Registrerar en kreditering på originalfakturan; markerar Credited när fullt krediterad.</summary>
+    public Result RegisterCredit(decimal amount, DateTime now)
+    {
+        if (Type != InvoiceType.Invoice || Status is InvoiceStatus.Draft)
+            return Result.Failure(Error.InvalidState());
+        if (amount <= 0 || amount > RemainingCreditable)
+            return Result.Failure(Error.OverCredit());
+
+        CreditedAmount += amount;
+        if (CreditedAmount >= Totals.Gross.Amount) Status = InvoiceStatus.Credited;
+        UpdatedAt = now;
+        return Result.Success();
+    }
+
+    /// <summary>Skapar en (full) kreditfaktura för <paramref name="original"/>: negerade rader, eget nummer, refererar originalet.</summary>
+    public static Invoice CreateCreditNote(string id, Invoice original, long number, DateOnly invoiceDate, DateTime now)
+    {
+        var negated = original.Lines.Select(l => new InvoiceLine(l.Description, -l.Quantity, l.UnitPriceExclVat, l.VatRate));
+        return new Invoice(
+            id, original.TenantId, original.CustomerId, original.CustomerSnapshot,
+            InvoiceType.CreditNote, InvoiceStatus.Sent, number, invoiceDate, invoiceDate, paidDate: null,
+            originalInvoiceId: original.Id, creditedAmount: 0m, negated, now, now);
+    }
 }

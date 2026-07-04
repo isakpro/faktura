@@ -148,4 +148,45 @@ public class InvoicingEndpointsTests : IClassFixture<FakturaApiFactory>
         var anon = _factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/invoices")).StatusCode);
     }
+
+    [Fact]
+    public async Task Credit_creates_credit_note_and_prevents_double_credit()
+    {
+        var a = await OwnerAsync("inv-credit@acme.se", "Credit");
+        var customerId = await CreateCustomerAsync(a);
+        var d = await CreateDraftAsync(a, customerId, new InvoiceLineInput("A", 1, 1000m, 25)); // brutto 1250
+        var sent = (await (await a.PostAsync($"/api/invoices/{d.Id}/send", null)).Content.ReadFromJsonAsync<InvoiceDto>())!;
+
+        var creditResp = await a.PostAsync($"/api/invoices/{d.Id}/credit", null);
+        Assert.Equal(HttpStatusCode.Created, creditResp.StatusCode);
+        var credit = (await creditResp.Content.ReadFromJsonAsync<InvoiceDto>())!;
+        Assert.Equal("CreditNote", credit.Type);
+        Assert.Equal(sent.Number + 1, credit.Number);   // eget nummer i serien
+        Assert.Equal(d.Id, credit.OriginalInvoiceId);
+        Assert.Equal(-1250m, credit.Totals.Gross);       // negerat
+
+        // Andra krediteringen nekas.
+        var again = await a.PostAsync($"/api/invoices/{d.Id}/credit", null);
+        Assert.Equal(HttpStatusCode.Conflict, again.StatusCode); // over_credit
+    }
+
+    [Fact]
+    public async Task Pdf_for_sent_invoice_returns_pdf_draft_rejected()
+    {
+        var a = await OwnerAsync("inv-pdf@acme.se", "Pdf");
+        var customerId = await CreateCustomerAsync(a);
+        var d = await CreateDraftAsync(a, customerId, new InvoiceLineInput("Konsult", 2, 800m, 25));
+
+        // Utkast har ingen PDF.
+        Assert.Equal(HttpStatusCode.Conflict, (await a.GetAsync($"/api/invoices/{d.Id}/pdf")).StatusCode);
+
+        await a.PostAsync($"/api/invoices/{d.Id}/send", null);
+        var pdf = await a.GetAsync($"/api/invoices/{d.Id}/pdf");
+
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+        Assert.Equal("application/pdf", pdf.Content.Headers.ContentType?.MediaType);
+        var bytes = await pdf.Content.ReadAsByteArrayAsync();
+        Assert.True(bytes.Length > 500);
+        Assert.Equal("%PDF"u8.ToArray(), bytes[..4]); // PDF-magisk header
+    }
 }

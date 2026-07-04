@@ -12,16 +12,21 @@ public sealed class InvoiceService
     private readonly IInvoiceRepository _invoices;
     private readonly ICustomerRepository _customers;
     private readonly IInvoiceNumberSequence _numbers;
+    private readonly IInvoicePdfGenerator _pdf;
+    private readonly IOrganizationRepository _organizations;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
 
     public InvoiceService(ITenantContext tenant, IInvoiceRepository invoices, ICustomerRepository customers,
-        IInvoiceNumberSequence numbers, IIdGenerator ids, IClock clock)
+        IInvoiceNumberSequence numbers, IInvoicePdfGenerator pdf, IOrganizationRepository organizations,
+        IIdGenerator ids, IClock clock)
     {
         _tenant = tenant;
         _invoices = invoices;
         _customers = customers;
         _numbers = numbers;
+        _pdf = pdf;
+        _organizations = organizations;
         _ids = ids;
         _clock = clock;
     }
@@ -111,6 +116,40 @@ public sealed class InvoiceService
 
         await _invoices.UpdateAsync(invoice, ct);
         return Result.Success(ToDto(invoice));
+    }
+
+    public async Task<Result<InvoiceDto>> CreditAsync(string id, CancellationToken ct)
+    {
+        var original = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        if (original is null) return Result.Failure<InvoiceDto>(Error.NotFound());
+
+        // Validera INNAN ett nummer förbrukas, så serien inte får hopp vid nekad kreditering.
+        if (original.Type != InvoiceType.Invoice || original.Status == InvoiceStatus.Draft)
+            return Result.Failure<InvoiceDto>(Error.InvalidState());
+        var remaining = original.RemainingCreditable;
+        if (remaining <= 0) return Result.Failure<InvoiceDto>(Error.OverCredit());
+
+        var number = await _numbers.NextAsync(_tenant.TenantId, ct);
+        var creditNote = Invoice.CreateCreditNote(_ids.NewId(), original, number, Today, _clock.UtcNow);
+        original.RegisterCredit(remaining, _clock.UtcNow);
+
+        await _invoices.AddAsync(creditNote, ct);
+        await _invoices.UpdateAsync(original, ct);
+        return Result.Success(ToDto(creditNote));
+    }
+
+    public sealed record InvoicePdf(byte[] Bytes, string FileName);
+
+    public async Task<Result<InvoicePdf>> GeneratePdfAsync(string id, CancellationToken ct)
+    {
+        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        if (invoice is null) return Result.Failure<InvoicePdf>(Error.NotFound());
+        if (invoice.Number is null) return Result.Failure<InvoicePdf>(Error.InvalidState()); // utkast har ingen PDF
+
+        var org = await _organizations.GetByIdAsync(_tenant.TenantId, ct);
+        var bytes = _pdf.Generate(invoice, org?.Name ?? "");
+        var prefix = invoice.Type == InvoiceType.CreditNote ? "kreditfaktura" : "faktura";
+        return Result.Success(new InvoicePdf(bytes, $"{prefix}-{invoice.Number}.pdf"));
     }
 
     private static Result<List<InvoiceLine>> ToLines(IEnumerable<InvoiceLineInput> inputs)

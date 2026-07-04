@@ -168,6 +168,27 @@ public sealed class MemberService
         return Result.Success(new MemberDto(target.Id, target.Email, target.Role.ToString()));
     }
 
+    public async Task<Result> RemoveMemberAsync(string targetUserId, CancellationToken ct)
+    {
+        var target = await _users.GetByIdAsync(_tenant.TenantId, targetUserId, ct);
+        if (target is null) return Result.Failure(Error.NotFound());
+
+        var canRemove = MembershipRules.CanRemoveMember(_tenant.Role, target.Role);
+        if (canRemove.IsFailure) return canRemove;
+
+        if (target.Role == UserRole.Owner)
+        {
+            var ownerCount = await _users.CountOwnersAsync(_tenant.TenantId, ct);
+            var lastOwner = MembershipRules.EnsureNotRemovingLastOwner(target.Role, ownerCount);
+            if (lastOwner.IsFailure) return lastOwner;
+        }
+
+        // Refresh-tokens dör automatiskt: RefreshAsync slår upp användaren och nekar när den saknas.
+        await _users.RemoveAsync(_tenant.TenantId, targetUserId, ct);
+        _logger.LogInformation("Member {UserId} removed from tenant {TenantId}", targetUserId, _tenant.TenantId);
+        return Result.Success();
+    }
+
     private static InvitationDto ToDto(Invitation i) => new(i.Id, i.Email, i.Role.ToString(), i.Status.ToString());
 
     private static bool TryParseAssignableRole(string value, out UserRole role)

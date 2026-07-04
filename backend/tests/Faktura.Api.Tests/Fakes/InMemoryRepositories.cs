@@ -40,6 +40,13 @@ public sealed class InMemoryUserRepository : IUserRepository
         _users[user.Id] = user;
         return Task.CompletedTask;
     }
+
+    public Task RemoveAsync(string tenantId, string userId, CancellationToken ct = default)
+    {
+        if (_users.TryGetValue(userId, out var u) && u.TenantId == tenantId)
+            _users.TryRemove(userId, out _);
+        return Task.CompletedTask;
+    }
 }
 
 public sealed class InMemoryInvitationRepository : IInvitationRepository

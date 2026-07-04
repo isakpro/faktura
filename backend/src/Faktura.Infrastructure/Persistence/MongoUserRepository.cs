@@ -51,4 +51,7 @@ internal sealed class MongoUserRepository : IUserRepository
             u => u.Id == user.Id && u.TenantId == user.TenantId,
             UserDocument.FromDomain(user),
             cancellationToken: ct);
+
+    public Task RemoveAsync(string tenantId, string userId, CancellationToken ct = default)
+        => _context.Users.DeleteOneAsync(u => u.Id == userId && u.TenantId == tenantId, ct);
 }

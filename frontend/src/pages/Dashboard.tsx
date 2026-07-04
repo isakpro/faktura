@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { api, ApiError } from "../api/client";
-import type { BillingDto, InvitationDto, MemberDto } from "../api/types";
+import type { BillingDto, InvitationDto, MemberDto, ReminderSettingsDto } from "../api/types";
 import { Nav } from "../components/Nav";
 import { Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
@@ -144,6 +144,50 @@ export function Dashboard() {
           )}
         </Card>
       )}
+
+      {canManage && <ReminderSettingsCard />}
     </div>
+  );
+}
+
+function ReminderSettingsCard() {
+  const qc = useQueryClient();
+  const settings = useQuery({
+    queryKey: ["reminder-settings"],
+    queryFn: () => api.get<ReminderSettingsDto>("/api/reminder-settings"),
+  });
+
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [days, setDays] = useState<number | null>(null);
+  const autoEnabled = enabled ?? settings.data?.autoEnabled ?? false;
+  const daysAfterDue = days ?? settings.data?.daysAfterDue ?? 7;
+
+  const save = useMutation({
+    mutationFn: () =>
+      api.put<ReminderSettingsDto>("/api/reminder-settings", { autoEnabled, daysAfterDue }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reminder-settings"] }),
+  });
+
+  return (
+    <Card>
+      <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Betalningspåminnelser</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: tokens.space.md, flexWrap: "wrap" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: tokens.space.sm }}>
+          <input type="checkbox" checked={autoEnabled} onChange={(e) => setEnabled(e.target.checked)} />
+          Skicka automatiskt
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: tokens.space.sm }}>
+          dagar efter förfall:
+          <Input
+            type="number"
+            value={daysAfterDue}
+            onChange={(e) => setDays(Number(e.target.value))}
+            style={{ width: 80 }}
+          />
+        </label>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>Spara</Button>
+        {save.isSuccess && <span style={{ color: tokens.color.success, fontSize: tokens.font.size.sm }}>Sparat.</span>}
+      </div>
+    </Card>
   );
 }

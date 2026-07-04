@@ -71,6 +71,29 @@ public static class InvoiceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
+        group.MapPost("/{id}/remind", async (string id, RemindRequest req, ReminderService svc, CancellationToken ct) =>
+        {
+            var result = await svc.RemindAsync(id, req.Recipient, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        group.MapGet("/{id}/reminders", async (string id, ReminderService svc, CancellationToken ct) =>
+        {
+            var result = await svc.HistoryAsync(id, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        var settings = app.MapGroup("/api/reminder-settings").RequireAuthorization();
+
+        settings.MapGet("", async (ReminderService svc, CancellationToken ct) =>
+            Results.Ok(await svc.GetSettingsAsync(ct)));
+
+        settings.MapPut("", async (ReminderSettingsDto dto, ReminderService svc, CancellationToken ct) =>
+        {
+            var result = await svc.UpdateSettingsAsync(dto, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
         return app;
     }
 }

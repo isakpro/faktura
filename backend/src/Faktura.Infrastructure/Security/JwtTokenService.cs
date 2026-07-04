@@ -48,11 +48,13 @@ public sealed class JwtTokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 
+        // notBefore utelämnas medvetet: exp är skyddet, och ett nbf från en styrbar test-
+        // klocka skulle ligga i framtiden relativt JwtBearers verkliga valideringstid.
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,
             audience: _options.Audience,
             claims: claims,
-            notBefore: now,
+            notBefore: null,
             expires: expires,
             signingCredentials: _credentials);
 

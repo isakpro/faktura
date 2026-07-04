@@ -43,6 +43,8 @@ public static class DependencyInjection
         services.AddSingleton<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
         services.AddScoped<IInvoiceEmailRepository, MongoInvoiceEmailRepository>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IInvoiceReminderRepository, MongoInvoiceReminderRepository>();
+        services.AddScoped<IReminderSettingsRepository, MongoReminderSettingsRepository>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

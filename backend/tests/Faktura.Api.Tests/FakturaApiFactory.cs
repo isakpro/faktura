@@ -71,6 +71,15 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
             services.AddSingleton<IInvoiceEmailRepository, InMemoryInvoiceEmailRepository>();
+
+            // Påminnelser (004): styrbar klocka + in-memory repos.
+            services.RemoveAll<IClock>();
+            services.AddSingleton<MutableClock>();
+            services.AddSingleton<IClock>(sp => sp.GetRequiredService<MutableClock>());
+            services.RemoveAll<IInvoiceReminderRepository>();
+            services.RemoveAll<IReminderSettingsRepository>();
+            services.AddSingleton<IInvoiceReminderRepository, InMemoryInvoiceReminderRepository>();
+            services.AddSingleton<IReminderSettingsRepository, InMemoryReminderSettingsRepository>();
         });
     }
 }

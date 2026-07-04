@@ -29,6 +29,11 @@ builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<ReminderMailer>();
+builder.Services.AddScoped<ReminderService>();
+builder.Services.AddScoped<ReminderJob>();
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddHostedService<ReminderBackgroundService>();
 builder.Services.AddProblemDetails();
 
 builder.Services

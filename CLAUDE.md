@@ -31,5 +31,9 @@ Aktiv feature: **003 — E-postutskick av faktura** (mejla skickad faktura som P
 - Checklista: [specs/003-faktura-epost/checklists/requirements.md](specs/003-faktura-epost/checklists/requirements.md)
 Clarify klar (2026-07-04): SMTP bakom `IEmailSender` (fejkas i test), separat "Mejla"-åtgärd på
 skickad faktura (kan skickas om/överstyra adress), systemavsändare + Reply-To = avsändarens
-e-post, utskickshistorik per faktura. Bygger på 002 (PDF) + 001 (isolering/auth). Nästa: `/speckit-plan`.
+e-post, utskickshistorik per faktura. Bygger på 002 (PDF) + 001 (isolering/auth).
+**Implementerat** (feature/003-faktura-epost): US1–US3 — `EmailService` (mejlar skickad faktura
+som PDF-bilaga via SMTP/MailKit bakom `IEmailSender`, loggar i egen `invoiceEmails`-collection),
+endpoints `POST /invoices/{id}/email` + `GET /invoices/{id}/emails`, frontend "Mejla"-knapp.
+`dotnet test` = 85 gröna (46 domän + 39 API). Nästa: PR till `develop`.
 <!-- SPECKIT END -->

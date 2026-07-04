@@ -28,6 +28,20 @@ export function Invoices() {
   const [customerId, setCustomerId] = useState("");
   const [lines, setLines] = useState<InvoiceLineInput[]>([emptyLine()]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const email = useMutation({
+    mutationFn: ({ id, recipient }: { id: string; recipient: string | null }) =>
+      api.post(`/api/invoices/${id}/email`, { recipient }),
+    onSuccess: () => setNotice("Fakturan mejlades till kunden."),
+    onError: (err) => setNotice(err instanceof ApiError ? `Kunde inte mejla: ${err.message}` : "Kunde inte mejla."),
+  });
+
+  function mailInvoice(id: string) {
+    const r = window.prompt("Mottagare (lämna tomt för kundens e-post):", "");
+    if (r === null) return;
+    email.mutate({ id, recipient: r.trim() || null });
+  }
 
   const create = useMutation({
     mutationFn: () => api.post<InvoiceDto>("/api/invoices", { customerId, lines }),
@@ -98,6 +112,7 @@ export function Invoices() {
 
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Fakturor</h2>
+        {notice && <p style={{ color: tokens.color.success, fontSize: tokens.font.size.sm }}>{notice}</p>}
         {invoices.isLoading && <p>Laddar…</p>}
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -128,6 +143,9 @@ export function Invoices() {
                   )}
                   {inv.number != null && (
                     <Button onClick={() => openAuthed(`/api/invoices/${inv.id}/pdf`)} style={{ marginLeft: 4, background: tokens.color.surfaceAlt }}>PDF</Button>
+                  )}
+                  {inv.number != null && (
+                    <Button onClick={() => mailInvoice(inv.id)} style={{ marginLeft: 4, background: tokens.color.surfaceAlt }}>Mejla</Button>
                   )}
                 </td>
               </tr>

@@ -18,6 +18,9 @@ public interface ITenantContext
     /// <summary>The current user's id. Throws when unauthenticated.</summary>
     string UserId { get; }
 
+    /// <summary>The current user's email (from the JWT), or null if absent.</summary>
+    string? Email { get; }
+
     /// <summary>The current user's role.</summary>
     UserRole Role { get; }
 }

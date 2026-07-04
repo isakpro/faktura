@@ -21,6 +21,8 @@ public sealed class HttpTenantContext : ITenantContext
 
     public string UserId => Required("sub");
 
+    public string? Email => _user?.FindFirstValue("email");
+
     public UserRole Role =>
         Enum.TryParse<UserRole>(_user?.FindFirstValue(FakturaClaims.Role), out var role)
             ? role

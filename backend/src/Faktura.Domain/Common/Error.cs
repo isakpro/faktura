@@ -32,4 +32,9 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
     public static Error EmptyInvoice() => new("empty_invoice", "Fakturan saknar rader.");
     public static Error InvalidState() => new("invalid_state", "Åtgärden är inte tillåten i fakturans nuvarande status.");
     public static Error OverCredit() => new("over_credit", "Kreditbeloppet överstiger kvarvarande att kreditera.");
+
+    // E-postutskick (spec 003).
+    public static Error NoRecipient() => new("no_recipient", "Ingen mottagaradress — kunden saknar e-post.");
+    public static Error InvalidRecipient() => new("invalid_recipient", "Ogiltig mottagaradress.");
+    public static Error EmailFailed() => new("email_failed", "E-postutskicket misslyckades.");
 }

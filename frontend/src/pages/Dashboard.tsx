@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { api, ApiError } from "../api/client";
 import type { BillingDto, InvitationDto, MemberDto } from "../api/types";
+import { Nav } from "../components/Nav";
 import { Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
 export function Dashboard() {
-  const { user, organization, logout } = useAuth();
+  const { user, organization } = useAuth();
   const qc = useQueryClient();
   const canManage = user?.role === "Owner" || user?.role === "Admin";
   const isOwner = user?.role === "Owner";
@@ -54,16 +55,11 @@ export function Dashboard() {
   }
 
   return (
-    <div style={{ maxWidth: 780, margin: "5vh auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: tokens.font.size.xl }}>{organization?.name}</h1>
-          <span style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm }}>
-            {user?.email} · {user?.role} · Plan: {organization?.plan}
-          </span>
-        </div>
-        <Button onClick={logout} style={{ background: tokens.color.surfaceAlt }}>Logga ut</Button>
-      </header>
+    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
+      <Nav />
+      <span style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.md}` }}>
+        {user?.email} · {user?.role} · Plan: {organization?.plan}
+      </span>
 
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Medlemmar</h2>

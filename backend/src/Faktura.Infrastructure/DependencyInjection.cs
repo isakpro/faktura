@@ -3,6 +3,7 @@ using Faktura.Domain.Authentication;
 using Faktura.Infrastructure.Billing;
 using Faktura.Infrastructure.Common;
 using Faktura.Infrastructure.Configuration;
+using Faktura.Infrastructure.Pdf;
 using Faktura.Infrastructure.Persistence;
 using Faktura.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +35,10 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, MongoRefreshTokenRepository>();
         services.AddScoped<IInvitationRepository, MongoInvitationRepository>();
         services.AddScoped<IProcessedEventStore, MongoProcessedEventStore>();
+        services.AddScoped<ICustomerRepository, MongoCustomerRepository>();
+        services.AddScoped<IInvoiceRepository, MongoInvoiceRepository>();
+        services.AddScoped<IInvoiceNumberSequence, MongoInvoiceNumberSequence>();
+        services.AddSingleton<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

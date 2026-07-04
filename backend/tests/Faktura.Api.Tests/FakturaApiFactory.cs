@@ -56,6 +56,14 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IBillingGateway, FakeBillingGateway>();
             services.AddSingleton<IWebhookEventParser, FakeWebhookEventParser>();
             services.AddSingleton<IProcessedEventStore, InMemoryProcessedEventStore>();
+
+            // Fakturadomän (002): in-memory customer/invoice/nummerserie.
+            services.RemoveAll<ICustomerRepository>();
+            services.RemoveAll<IInvoiceRepository>();
+            services.RemoveAll<IInvoiceNumberSequence>();
+            services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
+            services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
+            services.AddSingleton<IInvoiceNumberSequence, InMemoryInvoiceNumberSequence>();
         });
     }
 }

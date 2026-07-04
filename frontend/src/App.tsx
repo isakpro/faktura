@@ -5,6 +5,8 @@ import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
 import { AcceptInvite } from "./pages/AcceptInvite";
+import { Customers } from "./pages/Customers";
+import { Invoices } from "./pages/Invoices";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -21,14 +23,9 @@ export default function App() {
       <Route path="/login" element={status === "authed" ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup" element={status === "authed" ? <Navigate to="/" replace /> : <Signup />} />
       <Route path="/accept/:token" element={<AcceptInvite />} />
-      <Route
-        path="/"
-        element={
-          <Protected>
-            <Dashboard />
-          </Protected>
-        }
-      />
+      <Route path="/" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/customers" element={<Protected><Customers /></Protected>} />
+      <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -4,6 +4,8 @@ using System.Threading.RateLimiting;
 using Faktura.Api.Auth;
 using Faktura.Api.Features.Auth;
 using Faktura.Api.Features.Billing;
+using Faktura.Api.Features.Customers;
+using Faktura.Api.Features.Invoicing;
 using Faktura.Api.Features.Members;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Organizations;
@@ -24,6 +26,8 @@ builder.Services.AddScoped<TokenIssuer>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<BillingService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddProblemDetails();
 
 builder.Services
@@ -107,6 +111,8 @@ app.UseRateLimiter();
 app.MapAuthEndpoints();
 app.MapMembersEndpoints();
 app.MapBillingEndpoints();
+app.MapCustomerEndpoints();
+app.MapInvoiceEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

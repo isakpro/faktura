@@ -16,16 +16,22 @@ Auth = egen JWT, roller Owner/Admin/Member. Rate limiting per tenant. Stripe i t
 (prenumeration av tenants). Deploy: Cloudflare Pages + Render + MongoDB Atlas via GitHub
 Actions.
 
-Aktiv feature: **001 — SaaS-skelett** (tenancy + auth + roller + plan/Stripe + rate limiting).
-- Plan (läs först): [specs/001-saas-skelett/plan.md](specs/001-saas-skelett/plan.md)
-- Spec: [specs/001-saas-skelett/spec.md](specs/001-saas-skelett/spec.md)
-- Design: [research.md](specs/001-saas-skelett/research.md) · [data-model.md](specs/001-saas-skelett/data-model.md) · [contracts/rest-api.md](specs/001-saas-skelett/contracts/rest-api.md) · [quickstart.md](specs/001-saas-skelett/quickstart.md)
-Clarify klar (2026-06-28): self-service onboarding, JWT-claim-routing, Free/Pro = seats + rate-limit, ingen e-postverifiering i v1.
-Plan klar: .NET 10 clean architecture (Api/Domain/Infrastructure) + React/Vite, JWT access+refresh, TenantScopedRepository, inbyggd rate limiting per tenant, Stripe.net webhooks.
-**Implementerat** (feature/001-saas-skelett): backend US1–US5 (registrering/login/refresh/me,
-tenant-isolering, roller/inbjudningar/seat, Stripe-plan/webhooks, rate limiting per tenant) +
-React/Vite-frontend. `dotnet test` = 58 gröna (35 domän + 23 API). Kod i `backend/` (Api/Domain/
-Infrastructure + tester) och `frontend/`.
-Kända uppföljningar: member-borttagning (DELETE /api/members/{id}), frontend-tester, e-post-
-enumerering vid register. Nästa: PR till `develop`; fakturadomänen = spec 002.
+**Levererat: 001 — SaaS-skelett** (merge:at till `develop`): backend US1–US5 (registrering/login/
+refresh/me, tenant-isolering via `TenantScopedRepository`, roller/inbjudningar/seat, Stripe-plan/
+webhooks, rate limiting per tenant) + React/Vite-frontend. 58 tester gröna. Kod i `backend/`
+(Api/Domain/Infrastructure + tester) och `frontend/`. Kända uppföljningar: member-borttagning
+(DELETE /api/members/{id}), frontend-tester, e-post-enumerering vid register.
+
+Aktiv feature: **002 — Fakturadomänen** (kunder, fakturor, moms, status, kreditfaktura, PDF).
+- Plan (läs först): [specs/002-fakturadoman/plan.md](specs/002-fakturadoman/plan.md)
+- Spec: [specs/002-fakturadoman/spec.md](specs/002-fakturadoman/spec.md)
+- Design: [research.md](specs/002-fakturadoman/research.md) · [data-model.md](specs/002-fakturadoman/data-model.md) · [contracts/rest-api.md](specs/002-fakturadoman/contracts/rest-api.md) · [quickstart.md](specs/002-fakturadoman/quickstart.md)
+Clarify klar (2026-07-03): moms per rad (svenska satser, exkl. moms), löpande obruten fakturaserie
+per tenant vid skick, server-side PDF (QuestPDF), statusflöde Utkast→Skickad(låst)→Betald/Förfallen
++ kreditfaktura, betald markeras manuellt.
+Plan klar: bygger på 001 (TenantScopedRepository/JWT), decimal+öresavrundning, atomisk
+`invoiceCounters` ($inc), QuestPDF bakom interface.
+**Implementerat** (feature/002-fakturadoman): US1–US6 — kunder, utkast+moms (`InvoiceCalculator`),
+skick/atomisk nummerserie/låsning, betalstatus, kreditfaktura, PDF (QuestPDF) + frontend
+(Kunder/Fakturor). `dotnet test` = 78 gröna (46 domän + 32 API). Nästa: PR till `develop`.
 <!-- SPECKIT END -->

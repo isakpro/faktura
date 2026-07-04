@@ -26,4 +26,10 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
 
     // Billing (US4).
     public static Error InvalidSignature() => new("invalid_signature", "Webhook-signaturen kunde inte verifieras.");
+
+    // Fakturadomän (spec 002).
+    public static Error InvoiceLocked() => new("invoice_locked", "Fakturan är skickad och kan inte ändras.");
+    public static Error EmptyInvoice() => new("empty_invoice", "Fakturan saknar rader.");
+    public static Error InvalidState() => new("invalid_state", "Åtgärden är inte tillåten i fakturans nuvarande status.");
+    public static Error OverCredit() => new("over_credit", "Kreditbeloppet överstiger kvarvarande att kreditera.");
 }

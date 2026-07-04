@@ -25,4 +25,7 @@ public interface IUserRepository
     Task AddAsync(User user, CancellationToken ct = default);
 
     Task UpdateAsync(User user, CancellationToken ct = default);
+
+    /// <summary>Tenant-scoped removal (both id and tenant must match).</summary>
+    Task RemoveAsync(string tenantId, string userId, CancellationToken ct = default);
 }

@@ -49,6 +49,15 @@ export function Dashboard() {
     },
   });
 
+  const removeMember = useMutation({
+    mutationFn: (id: string) => api.del(`/api/members/${id}`),
+    onSuccess: () => {
+      setInviteError(null);
+      qc.invalidateQueries({ queryKey: ["members"] });
+    },
+    onError: (err) => setInviteError(err instanceof ApiError ? err.message : "Kunde inte ta bort medlemmen."),
+  });
+
   function onInvite(e: FormEvent) {
     e.preventDefault();
     invite.mutate({ email: inviteEmail, role: inviteRole });
@@ -66,9 +75,19 @@ export function Dashboard() {
         {members.isLoading && <p>Laddar…</p>}
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {members.data?.map((m) => (
-            <li key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: tokens.space.sm, borderBottom: `1px solid ${tokens.color.border}` }}>
+            <li key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: tokens.space.sm, borderBottom: `1px solid ${tokens.color.border}` }}>
               <span>{m.email}</span>
-              <span style={{ color: tokens.color.textMuted }}>{m.role}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: tokens.space.sm }}>
+                <span style={{ color: tokens.color.textMuted }}>{m.role}</span>
+                {canManage && m.id !== user?.id && (
+                  <Button
+                    onClick={() => window.confirm(`Ta bort ${m.email}?`) && removeMember.mutate(m.id)}
+                    style={{ background: tokens.color.surfaceAlt }}
+                  >
+                    Ta bort
+                  </Button>
+                )}
+              </span>
             </li>
           ))}
         </ul>

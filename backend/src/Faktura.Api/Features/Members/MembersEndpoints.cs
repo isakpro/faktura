@@ -35,6 +35,12 @@ public static class MembersEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
+        authed.MapDelete("/members/{id}", async (string id, MemberService svc, CancellationToken ct) =>
+        {
+            var result = await svc.RemoveMemberAsync(id, ct);
+            return result.IsSuccess ? Results.NoContent() : AuthEndpoints.ToProblem(result.Error);
+        });
+
         // Public: an invitee accepts before they have an account.
         app.MapPost("/api/invitations/{token}/accept", async (
             string token, AcceptInvitationRequest req, MemberService svc, CancellationToken ct) =>

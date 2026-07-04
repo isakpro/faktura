@@ -50,6 +50,17 @@ public class MembershipRulesTests
         Assert.Equal(ok, MembershipRules.EnsureSeatAvailable(active, limit).IsSuccess);
     }
 
+    [Theory]
+    [InlineData(UserRole.Owner, UserRole.Member, true)]   // owner tar bort member
+    [InlineData(UserRole.Owner, UserRole.Owner, true)]    // owner tar bort annan owner (antal vaktas separat)
+    [InlineData(UserRole.Admin, UserRole.Member, true)]   // admin tar bort member
+    [InlineData(UserRole.Admin, UserRole.Owner, false)]   // admin får inte röra owner
+    [InlineData(UserRole.Member, UserRole.Member, false)] // member får inget
+    public void CanRemoveMember_enforces_rbac(UserRole actor, UserRole target, bool allowed)
+    {
+        Assert.Equal(allowed, MembershipRules.CanRemoveMember(actor, target).IsSuccess);
+    }
+
     [Fact]
     public void EnsureNotRemovingLastOwner_blocks_last_owner()
     {

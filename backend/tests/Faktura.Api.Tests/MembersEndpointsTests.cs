@@ -133,4 +133,70 @@ public class MembersEndpointsTests : IClassFixture<FakturaApiFactory>
         var resp = await anon.GetAsync("/api/members");
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
+
+    [Fact]
+    public async Task Owner_can_remove_member_and_their_refresh_token_dies()
+    {
+        var (owner, _) = await RegisterOwnerAsync("rm-owner@acme.se", "RmOrg");
+        var token = await InviteAsync(owner, "rm-member@acme.se");
+        var member = await AcceptAsync(token);
+
+        var resp = await owner.DeleteAsync($"/api/members/{member.User.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, resp.StatusCode);
+
+        var members = await owner.GetFromJsonAsync<List<MemberDto>>("/api/members");
+        Assert.DoesNotContain(members!, m => m.Id == member.User.Id);
+
+        // Den borttagna användarens refresh-token är död (användaren finns inte längre).
+        var refresh = await _factory.CreateClient()
+            .PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(member.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    }
+
+    [Fact]
+    public async Task Member_cannot_remove_others_403()
+    {
+        var (owner, ownerAuth) = await RegisterOwnerAsync("rm2-owner@acme.se", "Rm2");
+        var token = await InviteAsync(owner, "rm2-member@acme.se");
+        var member = await AcceptAsync(token);
+
+        var memberClient = _factory.CreateClient();
+        memberClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", member.AccessToken);
+
+        var resp = await memberClient.DeleteAsync($"/api/members/{ownerAuth.User.Id}");
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_cannot_remove_owner_403()
+    {
+        var (owner, ownerAuth) = await RegisterOwnerAsync("rm3-owner@acme.se", "Rm3");
+        var token = await InviteAsync(owner, "rm3-admin@acme.se", "Admin");
+        var admin = await AcceptAsync(token);
+
+        var adminClient = _factory.CreateClient();
+        adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", admin.AccessToken);
+
+        var resp = await adminClient.DeleteAsync($"/api/members/{ownerAuth.User.Id}");
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Cannot_remove_last_owner_409()
+    {
+        var (owner, auth) = await RegisterOwnerAsync("rm4-owner@acme.se", "Rm4");
+
+        var resp = await owner.DeleteAsync($"/api/members/{auth.User.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode); // last_owner
+    }
+
+    [Fact]
+    public async Task Cannot_remove_another_tenants_member_404()
+    {
+        var (a, _) = await RegisterOwnerAsync("rm5-a@acme.se", "Rm5A");
+        var (_, bAuth) = await RegisterOwnerAsync("rm5-b@acme.se", "Rm5B");
+
+        var resp = await a.DeleteAsync($"/api/members/{bAuth.User.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
 }

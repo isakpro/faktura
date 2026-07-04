@@ -29,6 +29,21 @@ public static class MembershipRules
         return Result.Success();
     }
 
+    /// <summary>
+    /// Owner/Admin may remove members, but only an Owner may remove another Owner.
+    /// The last-Owner invariant is checked separately via <see cref="EnsureNotRemovingLastOwner"/>.
+    /// </summary>
+    public static Result CanRemoveMember(UserRole actor, UserRole targetRole)
+    {
+        if (actor is not (UserRole.Owner or UserRole.Admin))
+            return Result.Failure(Error.Forbidden());
+
+        if (targetRole == UserRole.Owner && actor != UserRole.Owner)
+            return Result.Failure(Error.Forbidden());
+
+        return Result.Success();
+    }
+
     /// <summary>A tenant may not exceed its plan's seat limit (FR-025).</summary>
     public static Result EnsureSeatAvailable(int activeUsers, int seatLimit) =>
         activeUsers < seatLimit

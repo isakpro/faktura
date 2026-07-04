@@ -32,6 +32,12 @@ levererad. Kvarvarande uppföljningar: frontend-tester (Vitest), e-post-enumerer
 frontend "Mejla"-knapp. Spec: [specs/003-faktura-epost/](specs/003-faktura-epost/spec.md).
 
 **Release v0.3.0** på `main` (001+002+003). 95 tester gröna (51 domän + 44 API).
-Ingen aktiv feature — nästa är spec 004 (kandidater: påminnelser, återkommande fakturor,
-artikelregister) eller CD-secrets (Cloudflare/Render/Atlas) för skarp deploy.
+
+Aktiv feature: **004 — Betalningspåminnelser** (påminnelse-mejl för förfallna fakturor).
+- Spec: [specs/004-betalningspaminnelser/spec.md](specs/004-betalningspaminnelser/spec.md)
+- Checklista: [specs/004-betalningspaminnelser/checklists/requirements.md](specs/004-betalningspaminnelser/checklists/requirements.md)
+Clarify klar (2026-07-04): manuell knapp + automatiskt dagligt jobb (per-org-inställning: på/av,
+standard av, dagar efter förfall standard 7; max EN automatisk påminnelse per faktura), enkel
+upprepningsbar påminnelse (mejl anger nr i ordningen), ingen avgift i v1 (original-PDF bifogas).
+Bygger på 002 (förfallostatus/PDF) + 003 (IEmailSender). Nästa: `/speckit-plan`.
 <!-- SPECKIT END -->

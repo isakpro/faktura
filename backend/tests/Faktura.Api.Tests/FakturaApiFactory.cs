@@ -64,6 +64,13 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
             services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
             services.AddSingleton<IInvoiceNumberSequence, InMemoryInvoiceNumberSequence>();
+
+            // E-post (003): fejkad sändare + in-memory utskicks-logg.
+            services.RemoveAll<IEmailSender>();
+            services.RemoveAll<IInvoiceEmailRepository>();
+            services.AddSingleton<FakeEmailSender>();
+            services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
+            services.AddSingleton<IInvoiceEmailRepository, InMemoryInvoiceEmailRepository>();
         });
     }
 }

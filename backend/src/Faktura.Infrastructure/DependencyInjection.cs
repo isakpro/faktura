@@ -2,6 +2,7 @@ using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Infrastructure.Billing;
 using Faktura.Infrastructure.Common;
+using Faktura.Infrastructure.Email;
 using Faktura.Infrastructure.Configuration;
 using Faktura.Infrastructure.Pdf;
 using Faktura.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.Configure<PlanOptions>(config.GetSection(PlanOptions.SectionName));
         services.Configure<ThrottleOptions>(config.GetSection(ThrottleOptions.SectionName));
         services.Configure<StripeOptions>(config.GetSection(StripeOptions.SectionName));
+        services.Configure<SmtpOptions>(config.GetSection(SmtpOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, ObjectIdGenerator>();
@@ -39,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository, MongoInvoiceRepository>();
         services.AddScoped<IInvoiceNumberSequence, MongoInvoiceNumberSequence>();
         services.AddSingleton<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
+        services.AddScoped<IInvoiceEmailRepository, MongoInvoiceEmailRepository>();
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

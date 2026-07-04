@@ -68,6 +68,9 @@ public static class AuthEndpoints
         "empty_invoice" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Tom faktura"),
         "invalid_state" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Ogiltig status"),
         "over_credit" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Överkreditering"),
+        "no_recipient" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Mottagare saknas"),
+        "invalid_recipient" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Ogiltig mottagare"),
+        "email_failed" => Results.Problem(error.Message, statusCode: StatusCodes.Status502BadGateway, title: "E-post misslyckades"),
         _ => Results.Problem(error.Message, statusCode: StatusCodes.Status400BadRequest, title: "Valideringsfel")
     };
 }

@@ -59,6 +59,18 @@ public static class InvoiceEndpoints
                 : AuthEndpoints.ToProblem(result.Error);
         });
 
+        group.MapPost("/{id}/email", async (string id, SendEmailRequest req, EmailService svc, CancellationToken ct) =>
+        {
+            var result = await svc.SendAsync(id, req.Recipient, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        group.MapGet("/{id}/emails", async (string id, EmailService svc, CancellationToken ct) =>
+        {
+            var result = await svc.HistoryAsync(id, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
         return app;
     }
 }

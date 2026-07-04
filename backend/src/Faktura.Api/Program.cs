@@ -28,6 +28,7 @@ builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<InvoiceService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddProblemDetails();
 
 builder.Services

@@ -32,6 +32,10 @@ public sealed class MongoContext
     internal IMongoCollection<ReminderSettingsDocument> ReminderSettings => _database.GetCollection<ReminderSettingsDocument>("reminderSettings");
     internal IMongoCollection<ArticleDocument> Articles => _database.GetCollection<ArticleDocument>("articles");
 
+    /// <summary>Pingar databasen — används av readiness-hälsokontrollen.</summary>
+    public Task PingAsync(CancellationToken ct = default)
+        => _database.RunCommandAsync<MongoDB.Bson.BsonDocument>(new MongoDB.Bson.BsonDocument("ping", 1), cancellationToken: ct);
+
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
     {

@@ -40,7 +40,14 @@ Spec: [specs/004-betalningspaminnelser/](specs/004-betalningspaminnelser/spec.md
 **Release v0.4.0** på `main` (001–004 + member-borttagning). `dotnet test` = 111 gröna
 (58 domän + 53 API) · frontend-tester (Vitest) = 7 gröna.
 
-Ingen aktiv feature. Kvarvarande uppföljning: e-post-enumerering vid register (kräver
-clarify — registreringsflödets beteende ändras). Nästa: spec 005 eller CD-secrets
-(Cloudflare/Render/Atlas) för skarp deploy.
+**Projektmål:** portfolio-projekt — ambitionen är så avancerat/imponerande som möjligt
+(teknisk bredd + polish). Vid siddesign: var kreativ, inte default-mallen (tokens behålls).
+
+Aktiv feature: **005 — Artikelregister** (artiklar som förifyller fakturarader).
+- Spec: [specs/005-artikelregister/spec.md](specs/005-artikelregister/spec.md)
+- Checklista: [specs/005-artikelregister/checklists/requirements.md](specs/005-artikelregister/checklists/requirements.md)
+Clarify klar (2026-07-05): enhet i v1 (rad + PDF, bakåtkompatibelt), valfritt unikt artikelnummer,
+alla roller hanterar registret, snapshot-princip (kopiering — prisändring rör aldrig befintliga
+fakturor). Bygger på 001 + 002. Nästa: `/speckit-plan`.
+Kvarvarande uppföljning: e-post-enumerering vid register (kräver clarify).
 <!-- SPECKIT END -->

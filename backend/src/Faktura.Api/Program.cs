@@ -44,8 +44,14 @@ builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<ReminderJob>();
 builder.Services.AddScoped<ArticleService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<InvoiceMailer>();
+builder.Services.AddScoped<RecurringInvoiceService>();
+builder.Services.AddScoped<RecurringInvoiceJob>();
 if (!builder.Environment.IsEnvironment("Testing"))
+{
     builder.Services.AddHostedService<ReminderBackgroundService>();
+    builder.Services.AddHostedService<RecurringBackgroundService>();
+}
 builder.Services.AddProblemDetails();
 
 // OpenAPI-dokument (Swashbuckle) + hälsokontroller. Liveness (/health) är beroendefri;
@@ -156,6 +162,7 @@ app.MapBillingEndpoints();
 app.MapCustomerEndpoints();
 app.MapInvoiceEndpoints();
 app.MapArticleEndpoints();
+app.MapRecurringEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

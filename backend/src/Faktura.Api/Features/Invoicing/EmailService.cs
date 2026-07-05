@@ -1,42 +1,26 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Domain.Common;
-using Faktura.Domain.Emailing;
 using Faktura.Domain.Invoicing;
-using Faktura.Infrastructure.Email;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Faktura.Api.Features.Invoicing;
 
-/// <summary>Mejlar en skickad faktura som PDF-bilaga och loggar varje utskick (tenant-scoped).</summary>
+/// <summary>Manuellt e-postutskick av skickad faktura (spec 003). Mejlbyggnaden delas med
+/// det återkommande jobbet via <see cref="InvoiceMailer"/>.</summary>
 public sealed class EmailService
 {
     private readonly ITenantContext _tenant;
     private readonly IInvoiceRepository _invoices;
-    private readonly IOrganizationRepository _organizations;
-    private readonly IInvoicePdfGenerator _pdf;
-    private readonly IEmailSender _sender;
     private readonly IInvoiceEmailRepository _log;
-    private readonly IIdGenerator _ids;
-    private readonly IClock _clock;
-    private readonly ILogger<EmailService> _logger;
-    private readonly SmtpOptions _smtp;
+    private readonly InvoiceMailer _mailer;
 
-    public EmailService(ITenantContext tenant, IInvoiceRepository invoices, IOrganizationRepository organizations,
-        IInvoicePdfGenerator pdf, IEmailSender sender, IInvoiceEmailRepository log, IIdGenerator ids, IClock clock,
-        ILogger<EmailService> logger, IOptions<SmtpOptions> smtp)
+    public EmailService(ITenantContext tenant, IInvoiceRepository invoices,
+        IInvoiceEmailRepository log, InvoiceMailer mailer)
     {
         _tenant = tenant;
         _invoices = invoices;
-        _organizations = organizations;
-        _pdf = pdf;
-        _sender = sender;
         _log = log;
-        _ids = ids;
-        _clock = clock;
-        _logger = logger;
-        _smtp = smtp.Value;
+        _mailer = mailer;
     }
 
     public async Task<Result<InvoiceEmailDto>> SendAsync(string invoiceId, string? recipientOverride, CancellationToken ct)
@@ -54,42 +38,9 @@ public sealed class EmailService
 
         var email = EmailAddress.Create(rawRecipient);
         if (email.IsFailure) return Result.Failure<InvoiceEmailDto>(Error.InvalidRecipient());
-        var recipient = email.Value.Value;
 
-        var org = await _organizations.GetByIdAsync(_tenant.TenantId, ct);
-        var sellerName = org?.Name ?? "";
-        var docName = invoice.Type == InvoiceType.CreditNote ? "Kreditfaktura" : "Faktura";
-        var subject = $"{docName} {invoice.Number} från {sellerName}";
-        var body =
-            $"Hej,\n\nHär kommer {docName.ToLowerInvariant()} {invoice.Number} från {sellerName}. " +
-            $"Belopp: {invoice.Totals.Gross} kr. Dokumentet finns som PDF-bilaga.\n\nVänliga hälsningar,\n{sellerName}";
-
-        var pdfBytes = _pdf.Generate(invoice, sellerName);
-        var message = new EmailMessage(
-            FromAddress: _smtp.FromAddress,
-            FromDisplayName: sellerName,
-            ReplyTo: _tenant.Email,
-            To: recipient,
-            Subject: subject,
-            Body: body,
-            Attachment: new EmailAttachment($"{docName.ToLowerInvariant()}-{invoice.Number}.pdf", "application/pdf", pdfBytes));
-
-        try
-        {
-            await _sender.SendAsync(message, ct);
-            var log = InvoiceEmail.Sent(_ids.NewId(), _tenant.TenantId, invoice.Id, recipient, subject, _clock.UtcNow);
-            await _log.AddAsync(log, ct);
-            _logger.LogInformation("Invoice {InvoiceId} emailed to {Recipient} (tenant {TenantId})", invoice.Id, recipient, _tenant.TenantId);
-            return Result.Success(ToDto(log));
-        }
-        catch (Exception ex)
-        {
-            // Leveransfel: logga som misslyckat men lämna fakturan orörd.
-            var log = InvoiceEmail.Failed(_ids.NewId(), _tenant.TenantId, invoice.Id, recipient, subject, ex.Message, _clock.UtcNow);
-            await _log.AddAsync(log, ct);
-            _logger.LogWarning(ex, "Failed to email invoice {InvoiceId} to {Recipient}", invoice.Id, recipient);
-            return Result.Failure<InvoiceEmailDto>(Error.EmailFailed());
-        }
+        var sent = await _mailer.SendAsync(_tenant.TenantId, invoice, email.Value.Value, _tenant.Email, ct);
+        return sent.IsSuccess ? Result.Success(ToDto(sent.Value)) : Result.Failure<InvoiceEmailDto>(sent.Error);
     }
 
     public async Task<Result<IReadOnlyList<InvoiceEmailDto>>> HistoryAsync(string invoiceId, CancellationToken ct)

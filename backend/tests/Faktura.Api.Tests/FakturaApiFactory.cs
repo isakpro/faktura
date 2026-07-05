@@ -84,6 +84,10 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             // Artiklar (005).
             services.RemoveAll<IArticleRepository>();
             services.AddSingleton<IArticleRepository, InMemoryArticleRepository>();
+
+            // Återkommande fakturor (007).
+            services.RemoveAll<IRecurringInvoiceRepository>();
+            services.AddSingleton<IRecurringInvoiceRepository, InMemoryRecurringInvoiceRepository>();
         });
     }
 }

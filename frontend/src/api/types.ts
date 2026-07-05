@@ -130,3 +130,15 @@ export interface InvoiceListItemDto {
   gross: number;
   dueDate?: string | null;
 }
+
+export interface RecurringInvoiceDto {
+  id: string;
+  customerId: string;
+  interval: string;
+  status: string;
+  startDate: string;
+  nextRunDate: string;
+  endDate?: string | null;
+  lines: InvoiceLineDto[];
+  gross: number;
+}

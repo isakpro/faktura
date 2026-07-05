@@ -58,6 +58,7 @@ export function Nav() {
           {link("/customers", "Kunder")}
           {link("/articles", "Artiklar")}
           {link("/invoices", "Fakturor")}
+          {link("/recurring", "Abonnemang")}
         </nav>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: tokens.space.md, paddingBottom: "8px" }}>

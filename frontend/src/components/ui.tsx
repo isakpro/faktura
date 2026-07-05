@@ -96,6 +96,7 @@ const badgeColors: Record<string, string> = {
   Credited: tokens.color.textMuted,
   CreditNote: tokens.color.textMuted,
   Active: tokens.color.success,
+  Paused: tokens.color.textMuted,
   Archived: tokens.color.textMuted,
 };
 
@@ -107,6 +108,7 @@ const badgeLabels: Record<string, string> = {
   Credited: "KREDITERAD",
   CreditNote: "KREDIT",
   Active: "AKTIV",
+  Paused: "PAUSAD",
   Archived: "ARKIVERAD",
 };
 

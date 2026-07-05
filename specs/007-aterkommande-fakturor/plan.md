@@ -24,9 +24,9 @@ TenantScopedRepository).
 
 ## Tasks
 
-- [ ] T001 [Domain] `RecurringInvoice` (validering, IsDue, AdvanceNextRun m. klampning, paus/slut) + domäntester
-- [ ] T002 [Infra] Document + `MongoRecurringInvoiceRepository` (TenantScopedRepository + system-`ListDueAsync`) + index `{status, nextRunDate}` + DI; `Invoice.RecurringSourceId`
-- [ ] T003 [Api] Extrahera `InvoiceMailer` (EmailService delegerar); `RecurringInvoiceService` + endpoints + integrationstester (CRUD/paus/isolering)
-- [ ] T004 [Api] `RecurringInvoiceJob` + `RecurringBackgroundService` + jobbtester (ikapp 3 perioder → 3 löpande nummer; omkörning 0; paus/slutdatum; saknad e-post → failed-logg men skickad faktura; feltolerans)
-- [ ] T005 [Frontend] Sida "Återkommande" (lista/skapa/pausa) + Nav-länk; vitest/build/lint gröna
-- [ ] T006 PR mot `develop` när grönt
+- [x] T001 [Domain] `RecurringInvoice` (validering, IsDue, AdvanceNextRun m. klampning, paus/slut) + domäntester
+- [x] T002 [Infra] Document + `MongoRecurringInvoiceRepository` (TenantScopedRepository + system-`ListDueAsync`) + index `{status, nextRunDate}` + DI; `Invoice.RecurringSourceId`
+- [x] T003 [Api] Extrahera `InvoiceMailer` (EmailService delegerar); `RecurringInvoiceService` + endpoints + integrationstester (CRUD/paus/isolering)
+- [x] T004 [Api] `RecurringInvoiceJob` + `RecurringBackgroundService` + jobbtester (ikapp 3 perioder → 3 löpande nummer; omkörning 0; paus/slutdatum; saknad e-post → failed-logg men skickad faktura; feltolerans)
+- [x] T005 [Frontend] Sida "Återkommande" (lista/skapa/pausa) + Nav-länk; vitest/build/lint gröna
+- [x] T006 PR mot `develop` när grönt

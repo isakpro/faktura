@@ -26,6 +26,10 @@ public sealed class Invoice
     public DateOnly? PaidDate { get; private set; }
     public string? OriginalInvoiceId { get; }
     public decimal CreditedAmount { get; private set; }
+
+    /// <summary>Mallen som genererade fakturan (spårbarhet, spec 007). Null för manuella fakturor.</summary>
+    public string? RecurringSourceId { get; private set; }
+
     public DateTime CreatedAt { get; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -34,8 +38,9 @@ public sealed class Invoice
     public Invoice(string id, string tenantId, string customerId, CustomerSnapshot? customerSnapshot,
         InvoiceType type, InvoiceStatus status, long? number, DateOnly? invoiceDate, DateOnly? dueDate,
         DateOnly? paidDate, string? originalInvoiceId, decimal creditedAmount, IEnumerable<InvoiceLine> lines,
-        DateTime createdAt, DateTime updatedAt)
+        DateTime createdAt, DateTime updatedAt, string? recurringSourceId = null)
     {
+        RecurringSourceId = recurringSourceId;
         Id = id;
         TenantId = tenantId;
         CustomerId = customerId;
@@ -53,10 +58,12 @@ public sealed class Invoice
         UpdatedAt = updatedAt;
     }
 
-    public static Invoice CreateDraft(string id, string tenantId, string customerId, IEnumerable<InvoiceLine> lines, DateTime now)
+    public static Invoice CreateDraft(string id, string tenantId, string customerId, IEnumerable<InvoiceLine> lines, DateTime now,
+        string? recurringSourceId = null)
         => new(id, tenantId, customerId, customerSnapshot: null, InvoiceType.Invoice, InvoiceStatus.Draft,
             number: null, invoiceDate: null, dueDate: null, paidDate: null, originalInvoiceId: null,
-            creditedAmount: 0m, lines, now, now);
+            creditedAmount: 0m, lines, now, now)
+        { RecurringSourceId = recurringSourceId };
 
     public InvoiceTotals Totals => InvoiceCalculator.Compute(_lines);
 

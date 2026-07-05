@@ -73,6 +73,10 @@ internal sealed class InvoiceDocument : ITenantDocument
     [BsonIgnoreIfNull]
     public string? OriginalInvoiceId { get; set; }
 
+    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonIgnoreIfNull]
+    public string? RecurringSourceId { get; set; }
+
     [BsonRepresentation(BsonType.Decimal128)] public decimal CreditedAmount { get; set; }
 
     public List<InvoiceLineDocument> Lines { get; set; } = new();
@@ -95,6 +99,7 @@ internal sealed class InvoiceDocument : ITenantDocument
         DueDate = ToDt(i.DueDate),
         PaidDate = ToDt(i.PaidDate),
         OriginalInvoiceId = i.OriginalInvoiceId,
+        RecurringSourceId = i.RecurringSourceId,
         CreditedAmount = i.CreditedAmount,
         Lines = i.Lines.Select(InvoiceLineDocument.FromDomain).ToList(),
         CreatedAt = i.CreatedAt,
@@ -104,5 +109,5 @@ internal sealed class InvoiceDocument : ITenantDocument
     public Invoice ToDomain() => new(
         Id, TenantId, CustomerId, CustomerSnapshot?.ToDomain(), Type, Status, Number,
         ToDate(InvoiceDate), ToDate(DueDate), ToDate(PaidDate), OriginalInvoiceId, CreditedAmount,
-        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt);
+        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt, RecurringSourceId);
 }

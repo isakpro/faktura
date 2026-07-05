@@ -25,7 +25,7 @@ public sealed class MongoContainerFixture : IAsyncLifetime
     {
         try
         {
-            _container = new MongoDbBuilder().Build();
+            _container = new MongoDbBuilder("mongo:8.0").Build();
             await _container.StartAsync();
             Context = new MongoContext(Options.Create(new MongoOptions
             {

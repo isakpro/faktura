@@ -5,6 +5,7 @@ import { api, ApiError } from "../api/client";
 import type { BillingDto, DashboardDto, InvitationDto, MemberDto, ReminderSettingsDto } from "../api/types";
 import { Nav } from "../components/Nav";
 import { RevenueChart } from "../components/RevenueChart";
+import { ActivityCard } from "../components/ActivityCard";
 import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -202,6 +203,8 @@ export function Dashboard() {
       )}
 
       {canManage && <ReminderSettingsCard />}
+
+      {canManage && <ActivityCard />}
     </div>
   );
 }

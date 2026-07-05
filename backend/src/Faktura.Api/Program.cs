@@ -140,6 +140,7 @@ app.UseCors("spa");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.UseMiddleware<Faktura.Api.Auth.AuditMiddleware>();
 
 // API-dokumentation: OpenAPI-json via Swashbuckle, interaktiv referens via Scalar (/scalar).
 app.UseSwagger();
@@ -163,6 +164,7 @@ app.MapCustomerEndpoints();
 app.MapInvoiceEndpoints();
 app.MapArticleEndpoints();
 app.MapRecurringEndpoints();
+app.MapAuditEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

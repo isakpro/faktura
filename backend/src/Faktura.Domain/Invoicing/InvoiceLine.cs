@@ -13,12 +13,16 @@ public sealed class InvoiceLine
     public decimal UnitPriceExclVat { get; }
     public VatRate VatRate { get; }
 
-    public InvoiceLine(string description, decimal quantity, decimal unitPriceExclVat, VatRate vatRate)
+    /// <summary>Valfri enhet (st/tim/kg …). Null för äldre rader och fritextrader utan enhet.</summary>
+    public string? Unit { get; }
+
+    public InvoiceLine(string description, decimal quantity, decimal unitPriceExclVat, VatRate vatRate, string? unit = null)
     {
         Description = description?.Trim() ?? "";
         Quantity = quantity;
         UnitPriceExclVat = unitPriceExclVat;
         VatRate = vatRate;
+        Unit = string.IsNullOrWhiteSpace(unit) ? null : unit.Trim();
     }
 
     /// <summary>Radens nettobelopp (antal × á-pris), öresavrundat.</summary>

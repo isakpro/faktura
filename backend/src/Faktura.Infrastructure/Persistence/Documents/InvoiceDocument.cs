@@ -12,16 +12,19 @@ internal sealed class InvoiceLineDocument
     [BsonRepresentation(BsonType.Decimal128)] public decimal UnitPriceExclVat { get; set; }
     public int VatRate { get; set; }
 
+    [BsonIgnoreIfNull] public string? Unit { get; set; }
+
     public static InvoiceLineDocument FromDomain(InvoiceLine l) => new()
     {
         Description = l.Description,
         Quantity = l.Quantity,
         UnitPriceExclVat = l.UnitPriceExclVat,
-        VatRate = (int)l.VatRate
+        VatRate = (int)l.VatRate,
+        Unit = l.Unit
     };
 
     public InvoiceLine ToDomain() =>
-        new(Description, Quantity, UnitPriceExclVat, VatRateExtensions.FromPercent(VatRate));
+        new(Description, Quantity, UnitPriceExclVat, VatRateExtensions.FromPercent(VatRate), Unit);
 }
 
 internal sealed class CustomerSnapshotDocument

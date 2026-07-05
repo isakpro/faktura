@@ -1,13 +1,13 @@
 namespace Faktura.Api.Features.Invoicing;
 
-public sealed record InvoiceLineInput(string Description, decimal Quantity, decimal UnitPriceExclVat, int VatRate);
+public sealed record InvoiceLineInput(string Description, decimal Quantity, decimal UnitPriceExclVat, int VatRate, string? Unit = null);
 
 public sealed record CreateInvoiceRequest(string CustomerId, List<InvoiceLineInput> Lines);
 public sealed record UpdateInvoiceRequest(string CustomerId, List<InvoiceLineInput> Lines);
 public sealed record MarkPaidRequest(DateOnly PaidDate);
 
 public sealed record InvoiceLineDto(
-    string Description, decimal Quantity, decimal UnitPriceExclVat, int VatRate, decimal Net, decimal Vat);
+    string Description, decimal Quantity, decimal UnitPriceExclVat, int VatRate, decimal Net, decimal Vat, string? Unit = null);
 
 public sealed record VatByRateDto(int Rate, decimal Vat);
 public sealed record InvoiceTotalsDto(decimal Net, IReadOnlyList<VatByRateDto> VatByRate, decimal Gross);

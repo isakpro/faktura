@@ -37,4 +37,7 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
     public static Error NoRecipient() => new("no_recipient", "Ingen mottagaradress — kunden saknar e-post.");
     public static Error InvalidRecipient() => new("invalid_recipient", "Ogiltig mottagaradress.");
     public static Error EmailFailed() => new("email_failed", "E-postutskicket misslyckades.");
+
+    // Artikelregister (spec 005).
+    public static Error SkuTaken() => new("sku_taken", "Artikelnumret används redan i organisationen.");
 }

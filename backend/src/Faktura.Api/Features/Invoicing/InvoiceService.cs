@@ -159,7 +159,7 @@ public sealed class InvoiceService
         {
             if (!VatRateExtensions.IsValid(l.VatRate))
                 return Result.Failure<List<InvoiceLine>>(Error.Validation($"Ogiltig momssats: {l.VatRate}."));
-            lines.Add(new InvoiceLine(l.Description, l.Quantity, l.UnitPriceExclVat, VatRateExtensions.FromPercent(l.VatRate)));
+            lines.Add(new InvoiceLine(l.Description, l.Quantity, l.UnitPriceExclVat, VatRateExtensions.FromPercent(l.VatRate), l.Unit));
         }
         return Result.Success(lines);
     }
@@ -172,7 +172,7 @@ public sealed class InvoiceService
         return new InvoiceDto(
             i.Id, i.Type.ToString(), EffectiveStatus(i), i.Number, i.CustomerId,
             i.InvoiceDate, i.DueDate, i.PaidDate, i.OriginalInvoiceId,
-            i.Lines.Select(l => new InvoiceLineDto(l.Description, l.Quantity, l.UnitPriceExclVat, (int)l.VatRate, l.Net.Amount, l.Vat.Amount)).ToList(),
+            i.Lines.Select(l => new InvoiceLineDto(l.Description, l.Quantity, l.UnitPriceExclVat, (int)l.VatRate, l.Net.Amount, l.Vat.Amount, l.Unit)).ToList(),
             new InvoiceTotalsDto(t.Net.Amount, t.VatByRate.Select(v => new VatByRateDto(v.RatePercent, v.Vat.Amount)).ToList(), t.Gross.Amount));
     }
 

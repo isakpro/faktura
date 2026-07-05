@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, openAuthed } from "../api/client";
-import type { CustomerDto, InvoiceDto, InvoiceLineInput, InvoiceListItemDto } from "../api/types";
+import type { ArticleDto, CustomerDto, InvoiceDto, InvoiceLineInput, InvoiceListItemDto } from "../api/types";
 import { Nav } from "../components/Nav";
-import { Button, Card, ErrorText, Field, Input } from "../components/ui";
+import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
 const VAT_RATES = [25, 12, 6, 0];
-const emptyLine = (): InvoiceLineInput => ({ description: "", quantity: 1, unitPriceExclVat: 0, vatRate: 25 });
+const emptyLine = (): InvoiceLineInput => ({ description: "", quantity: 1, unitPriceExclVat: 0, vatRate: 25, unit: null });
 const kr = (n: number) => `${n.toFixed(2)} kr`;
 
 const selectStyle = {
@@ -24,6 +24,7 @@ export function Invoices() {
 
   const customers = useQuery({ queryKey: ["customers"], queryFn: () => api.get<CustomerDto[]>("/api/customers") });
   const invoices = useQuery({ queryKey: ["invoices"], queryFn: () => api.get<InvoiceListItemDto[]>("/api/invoices") });
+  const articles = useQuery({ queryKey: ["articles", "active"], queryFn: () => api.get<ArticleDto[]>("/api/articles") });
 
   const [customerId, setCustomerId] = useState("");
   const [lines, setLines] = useState<InvoiceLineInput[]>([emptyLine()]);
@@ -73,6 +74,18 @@ export function Invoices() {
     setLines((ls) => ls.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   }
 
+  /** Förifyller raden från vald artikel (snapshot — värdena kopieras och kan ändras fritt). */
+  function applyArticle(i: number, articleId: string) {
+    const article = articles.data?.find((a) => a.id === articleId);
+    if (!article) return;
+    updateLine(i, {
+      description: article.name,
+      unitPriceExclVat: article.unitPriceExclVat,
+      vatRate: article.vatRate,
+      unit: article.unit ?? null,
+    });
+  }
+
   function onCreate(e: FormEvent) {
     e.preventDefault();
     if (!customerId) {
@@ -98,8 +111,17 @@ export function Invoices() {
 
           {lines.map((line, i) => (
             <div key={i} style={{ display: "flex", gap: tokens.space.sm, marginBottom: tokens.space.sm, alignItems: "center" }}>
+              {(articles.data?.length ?? 0) > 0 && (
+                <select value="" onChange={(e) => applyArticle(i, e.target.value)} style={{ ...selectStyle, width: 130 }}>
+                  <option value="">Artikel…</option>
+                  {articles.data?.map((a) => (
+                    <option key={a.id} value={a.id}>{a.sku ? `[${a.sku}] ` : ""}{a.name}</option>
+                  ))}
+                </select>
+              )}
               <Input placeholder="Beskrivning" value={line.description} onChange={(e) => updateLine(i, { description: e.target.value })} style={{ flex: 3 }} />
               <Input type="number" placeholder="Antal" value={line.quantity} onChange={(e) => updateLine(i, { quantity: Number(e.target.value) })} style={{ flex: 1 }} />
+              <Input placeholder="Enhet" value={line.unit ?? ""} onChange={(e) => updateLine(i, { unit: e.target.value || null })} style={{ width: 70 }} />
               <Input type="number" placeholder="À-pris" value={line.unitPriceExclVat} onChange={(e) => updateLine(i, { unitPriceExclVat: Number(e.target.value) })} style={{ flex: 1 }} />
               <select value={line.vatRate} onChange={(e) => updateLine(i, { vatRate: Number(e.target.value) })} style={selectStyle}>
                 {VAT_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
@@ -135,7 +157,7 @@ export function Invoices() {
               <tr key={inv.id} style={{ borderTop: `1px solid ${tokens.color.border}` }}>
                 <td style={{ padding: tokens.space.sm }}>{inv.number ?? "—"}</td>
                 <td>{customerName(inv.customerId)}</td>
-                <td>{inv.status}</td>
+                <td><Badge status={inv.status} /></td>
                 <td style={{ textAlign: "right" }}>{kr(inv.gross)}</td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   {inv.status === "Draft" && (

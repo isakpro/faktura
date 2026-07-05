@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Faktura.Api.Auth;
+using Faktura.Api.Features.Articles;
 using Faktura.Api.Features.Auth;
 using Faktura.Api.Features.Billing;
 using Faktura.Api.Features.Customers;
@@ -32,6 +33,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ReminderMailer>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<ReminderJob>();
+builder.Services.AddScoped<ArticleService>();
 if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddHostedService<ReminderBackgroundService>();
 builder.Services.AddProblemDetails();
@@ -119,6 +121,7 @@ app.MapMembersEndpoints();
 app.MapBillingEndpoints();
 app.MapCustomerEndpoints();
 app.MapInvoiceEndpoints();
+app.MapArticleEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

@@ -97,3 +97,48 @@ jobs:
         if: steps.detect.outputs.exists == 'true'
         working-directory: frontend
         run: npm run build --if-present
+
+  e2e:
+    name: E2E (Playwright mot compose-stacken)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Starta stacken
+        run: docker compose up -d --build
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installera Playwright
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+
+      - name: Vänta på API:t
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:5080/health/ready && exit 0 || sleep 2
+          done
+          echo "API:t blev aldrig redo"; docker compose logs api; exit 1
+
+      - name: Kör E2E
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Ladda upp rapport vid fel
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+
+      - name: Stäng stacken
+        if: always()
+        run: docker compose down -v

@@ -8,6 +8,7 @@ using Faktura.Api.Features.Billing;
 using Faktura.Api.Features.Customers;
 using Faktura.Api.Features.Invoicing;
 using Faktura.Api.Features.Members;
+using Faktura.Api.Health;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Organizations;
 using Faktura.Infrastructure;
@@ -16,8 +17,16 @@ using Faktura.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Strukturerad loggning (Serilog): konsol + berikad kontext; overridebart via "Serilog"-sektionen.
+builder.Host.UseSerilog((ctx, lc) => lc
+    .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console());
 
 // --- Services ---
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -37,6 +46,14 @@ builder.Services.AddScoped<ArticleService>();
 if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddHostedService<ReminderBackgroundService>();
 builder.Services.AddProblemDetails();
+
+// OpenAPI-dokument (Swashbuckle) + hälsokontroller. Liveness (/health) är beroendefri;
+// readiness (/health/ready) pingar Mongo och registreras inte i Testing (in-memory-repos).
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+var health = builder.Services.AddHealthChecks();
+if (!builder.Environment.IsEnvironment("Testing"))
+    health.AddCheck<MongoHealthCheck>("mongodb", tags: ["ready"]);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -111,10 +128,26 @@ var app = builder.Build();
 
 // --- Pipeline ---
 app.UseExceptionHandler();
+app.UseSerilogRequestLogging();
 app.UseCors("spa");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+
+// API-dokumentation: OpenAPI-json via Swashbuckle, interaktiv referens via Scalar (/scalar).
+app.UseSwagger();
+app.MapScalarApiReference(options =>
+{
+    options.Title = "Faktura API";
+    options.OpenApiRoutePattern = "/swagger/{documentName}/swagger.json";
+});
+
+// Hälsokontroller: /health = liveness (beroendefri), /health/ready = readiness (Mongo-ping).
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = r => !r.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/ready");
 
 app.MapAuthEndpoints();
 app.MapMembersEndpoints();

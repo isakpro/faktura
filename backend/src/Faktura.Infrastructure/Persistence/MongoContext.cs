@@ -30,6 +30,7 @@ public sealed class MongoContext
     internal IMongoCollection<InvoiceEmailDocument> InvoiceEmails => _database.GetCollection<InvoiceEmailDocument>("invoiceEmails");
     internal IMongoCollection<InvoiceReminderDocument> InvoiceReminders => _database.GetCollection<InvoiceReminderDocument>("invoiceReminders");
     internal IMongoCollection<ReminderSettingsDocument> ReminderSettings => _database.GetCollection<ReminderSettingsDocument>("reminderSettings");
+    internal IMongoCollection<ArticleDocument> Articles => _database.GetCollection<ArticleDocument>("articles");
 
     /// <summary>Creates indexes described in data-model.md. Safe to call repeatedly.</summary>
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
@@ -93,5 +94,23 @@ public sealed class MongoContext
             new CreateIndexModel<InvoiceReminderDocument>(
                 Builders<InvoiceReminderDocument>.IndexKeys.Ascending(r => r.TenantId).Ascending(r => r.InvoiceId),
                 new CreateIndexOptions { Name = "ix_reminder_tenant_invoice" }), cancellationToken: ct);
+
+        await Articles.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<ArticleDocument>(
+                Builders<ArticleDocument>.IndexKeys.Ascending(a => a.TenantId).Ascending(a => a.Name),
+                new CreateIndexOptions { Name = "ix_article_tenant_name" }),
+            // Partial (inte sparse!): i ett compound-index räcker det att tenantId finns för att
+            // dokumentet ska indexeras — sparse skulle alltså ge kollision mellan artiklar UTAN sku.
+            // Partial-filtret begränsar unikheten till dokument som faktiskt har ett sku.
+            new CreateIndexModel<ArticleDocument>(
+                Builders<ArticleDocument>.IndexKeys.Ascending(a => a.TenantId).Ascending(a => a.Sku),
+                new CreateIndexOptions<ArticleDocument>
+                {
+                    Name = "ux_article_tenant_sku",
+                    Unique = true,
+                    PartialFilterExpression = Builders<ArticleDocument>.Filter.Exists(a => a.Sku)
+                })
+        }, ct);
     }
 }

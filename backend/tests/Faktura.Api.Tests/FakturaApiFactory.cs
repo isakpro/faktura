@@ -80,6 +80,10 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IReminderSettingsRepository>();
             services.AddSingleton<IInvoiceReminderRepository, InMemoryInvoiceReminderRepository>();
             services.AddSingleton<IReminderSettingsRepository, InMemoryReminderSettingsRepository>();
+
+            // Artiklar (005).
+            services.RemoveAll<IArticleRepository>();
+            services.AddSingleton<IArticleRepository, InMemoryArticleRepository>();
         });
     }
 }

@@ -71,6 +71,7 @@ public static class AuthEndpoints
         "no_recipient" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Mottagare saknas"),
         "invalid_recipient" => Results.Problem(error.Message, statusCode: StatusCodes.Status422UnprocessableEntity, title: "Ogiltig mottagare"),
         "email_failed" => Results.Problem(error.Message, statusCode: StatusCodes.Status502BadGateway, title: "E-post misslyckades"),
+        "sku_taken" => Results.Problem(error.Message, statusCode: StatusCodes.Status409Conflict, title: "Artikelnummer upptaget"),
         _ => Results.Problem(error.Message, statusCode: StatusCodes.Status400BadRequest, title: "Valideringsfel")
     };
 }

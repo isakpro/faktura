@@ -69,8 +69,11 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
 
                         foreach (var line in invoice.Lines)
                         {
+                            var quantity = line.Unit is null
+                                ? line.Quantity.ToString("0.##")
+                                : $"{line.Quantity:0.##} {line.Unit}";
                             table.Cell().Text(line.Description);
-                            table.Cell().AlignRight().Text(line.Quantity.ToString("0.##"));
+                            table.Cell().AlignRight().Text(quantity);
                             table.Cell().AlignRight().Text(line.UnitPriceExclVat.ToString("0.00"));
                             table.Cell().AlignRight().Text($"{(int)line.VatRate}%");
                             table.Cell().AlignRight().Text(line.Net.ToString());

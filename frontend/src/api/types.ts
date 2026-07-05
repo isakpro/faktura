@@ -60,6 +60,17 @@ export interface InvoiceLineInput {
   quantity: number;
   unitPriceExclVat: number;
   vatRate: number;
+  unit?: string | null;
+}
+
+export interface ArticleDto {
+  id: string;
+  name: string;
+  sku?: string | null;
+  unit?: string | null;
+  unitPriceExclVat: number;
+  vatRate: number;
+  status: string;
 }
 
 export interface VatByRateDto {

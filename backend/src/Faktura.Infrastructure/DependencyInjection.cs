@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IInvoiceReminderRepository, MongoInvoiceReminderRepository>();
         services.AddScoped<IReminderSettingsRepository, MongoReminderSettingsRepository>();
+        services.AddScoped<IArticleRepository, MongoArticleRepository>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

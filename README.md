@@ -41,7 +41,20 @@ backend/         # ASP.NET Core (skapas i spec 001)
 frontend/        # React + Vite (skapas i spec 001)
 ```
 
-## Lokal utveckling (när koden finns)
+## Kör hela stacken med ett kommando
+
+```bash
+docker compose up --build
+```
+
+| Tjänst | URL |
+|---|---|
+| Appen (web) | http://localhost:8081 |
+| API + Scalar-docs | http://localhost:5080 · `/scalar` · `/health/ready` |
+| Mailpit (fångar alla mejl) | http://localhost:8025 |
+| MongoDB | mongodb://localhost:27017 |
+
+## Lokal utveckling (utan Docker)
 
 Krav: .NET 10 SDK, Node 20+, MongoDB lokalt (`mongodb://localhost:27017`) eller Docker.
 Hemligheter (JWT-nyckel, Mongo-sträng, Stripe-test-nycklar) sätts via miljövariabler —

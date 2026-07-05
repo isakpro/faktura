@@ -1,0 +1,73 @@
+# Faktura — hela stacken lokalt med ett kommando:
+#
+#   docker compose up --build
+#
+#   Web (appen):      http://localhost:8081
+#   API:              http://localhost:5080   (Scalar-docs: /scalar · hälsa: /health/ready)
+#   Mailpit (mejl):   http://localhost:8025   (fångar alla utskick — fakturor & påminnelser)
+#   MongoDB:          mongodb://localhost:27017
+#
+# Endast utvecklings-/demovärden — inga riktiga hemligheter här.
+name: faktura
+
+services:
+  mongo:
+    image: mongo:8.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # webbgränssnitt
+      - "1025:1025"   # SMTP
+
+  api:
+    build: ./backend
+    ports:
+      - "5080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      Mongo__ConnectionString: mongodb://mongo:27017
+      Mongo__Database: faktura
+      Jwt__SigningKey: compose-dev-signing-key-byt-aldrig-i-produktion-0123456789
+      Jwt__Issuer: faktura
+      Jwt__Audience: faktura
+      Smtp__Host: mailpit
+      Smtp__Port: "1025"
+      Smtp__UseStartTls: "false"
+      Smtp__FromAddress: no-reply@faktura.local
+      Cors__AllowedOrigins: http://localhost:8081,http://localhost:5173
+      Stripe__SecretKey: sk_test_placeholder
+      Stripe__WebhookSecret: whsec_placeholder
+      Stripe__ProPriceId: price_placeholder
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:5080
+    ports:
+      - "8081:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

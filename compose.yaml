@@ -53,7 +53,7 @@ services:
       Stripe__WebhookSecret: whsec_placeholder
       Stripe__ProPriceId: price_placeholder
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8080/health/ready || exit 1"]
+      test: ["CMD", "sh", "-c", "curl -fsS http://localhost:8080/health/ready || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

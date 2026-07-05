@@ -30,10 +30,10 @@ test("registrera → kund → faktura → skicka", async ({ page }) => {
   await page.getByPlaceholder("Antal").fill("10");
   await page.getByPlaceholder("À-pris").fill("1200");
   await page.getByRole("button", { name: "Skapa utkast" }).click();
-  await expect(page.getByText("UTKAST")).toBeVisible();
+  await expect(page.getByText("UTKAST", { exact: true })).toBeVisible();
 
   // Skicka — fakturan får nummer och stämplas SKICKAD.
   await page.getByRole("button", { name: "Skicka", exact: true }).click();
-  await expect(page.getByText("SKICKAD")).toBeVisible();
+  await expect(page.getByText("SKICKAD", { exact: true })).toBeVisible();
   await expect(page.getByRole("cell", { name: "1", exact: true })).toBeVisible();
 });

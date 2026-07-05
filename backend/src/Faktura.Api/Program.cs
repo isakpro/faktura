@@ -43,6 +43,7 @@ builder.Services.AddScoped<ReminderMailer>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<ReminderJob>();
 builder.Services.AddScoped<ArticleService>();
+builder.Services.AddScoped<DashboardService>();
 if (!builder.Environment.IsEnvironment("Testing"))
     builder.Services.AddHostedService<ReminderBackgroundService>();
 builder.Services.AddProblemDetails();

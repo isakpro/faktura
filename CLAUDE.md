@@ -31,18 +31,16 @@ levererad. Kvarvarande uppföljningar: frontend-tester (Vitest), e-post-enumerer
 `invoiceEmails`-collection), endpoints `POST /invoices/{id}/email` + `GET /invoices/{id}/emails`,
 frontend "Mejla"-knapp. Spec: [specs/003-faktura-epost/](specs/003-faktura-epost/spec.md).
 
-**Release v0.3.0** på `main` (001+002+003). 95 tester gröna (51 domän + 44 API).
+**Levererat: 004 — Betalningspåminnelser** (merge:at till `develop`): US1–US3 — `ReminderMailer`
+(delad kärna), `ReminderService` + `POST /invoices/{id}/remind` + `GET /invoices/{id}/reminders`,
+`ReminderJob` + `ReminderBackgroundService` (dagligt, opt-in per org, max EN automatisk per
+faktura), `GET/PUT /reminder-settings`, frontend "Påminn"-knapp + inställningskort.
+Spec: [specs/004-betalningspaminnelser/](specs/004-betalningspaminnelser/spec.md).
 
-Aktiv feature: **004 — Betalningspåminnelser** (påminnelse-mejl för förfallna fakturor).
-- Spec: [specs/004-betalningspaminnelser/spec.md](specs/004-betalningspaminnelser/spec.md)
-- Checklista: [specs/004-betalningspaminnelser/checklists/requirements.md](specs/004-betalningspaminnelser/checklists/requirements.md)
-Clarify klar (2026-07-04): manuell knapp + automatiskt dagligt jobb (per-org-inställning: på/av,
-standard av, dagar efter förfall standard 7; max EN automatisk påminnelse per faktura), enkel
-upprepningsbar påminnelse (mejl anger nr i ordningen), ingen avgift i v1 (original-PDF bifogas).
-Bygger på 002 (förfallostatus/PDF) + 003 (IEmailSender).
-**Implementerat** (feature/004-betalningspaminnelser): US1–US3 — `ReminderMailer` (delad kärna),
-`ReminderService` + `POST /invoices/{id}/remind` + `GET /invoices/{id}/reminders`,
-`ReminderJob` + `ReminderBackgroundService` (dagligt, ej i Testing), `GET/PUT /reminder-settings`,
-frontend "Påminn"-knapp + inställningskort. `dotnet test` = 111 gröna (58 domän + 53 API).
-Nästa: PR till `develop`.
+**Release v0.4.0** på `main` (001–004 + member-borttagning). `dotnet test` = 111 gröna
+(58 domän + 53 API) · frontend-tester (Vitest) = 7 gröna.
+
+Ingen aktiv feature. Kvarvarande uppföljning: e-post-enumerering vid register (kräver
+clarify — registreringsflödets beteende ändras). Nästa: spec 005 eller CD-secrets
+(Cloudflare/Render/Atlas) för skarp deploy.
 <!-- SPECKIT END -->

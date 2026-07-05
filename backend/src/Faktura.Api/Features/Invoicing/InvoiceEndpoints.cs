@@ -83,6 +83,9 @@ public static class InvoiceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
+        app.MapGet("/api/dashboard", async (DashboardService svc, CancellationToken ct) =>
+            Results.Ok(await svc.GetAsync(ct))).RequireAuthorization();
+
         var settings = app.MapGroup("/api/reminder-settings").RequireAuthorization();
 
         settings.MapGet("", async (ReminderService svc, CancellationToken ct) =>

@@ -108,6 +108,20 @@ export interface ReminderSettingsDto {
   daysAfterDue: number;
 }
 
+export interface MonthlyRevenueDto {
+  year: number;
+  month: number;
+  gross: number;
+}
+
+export interface DashboardDto {
+  outstanding: number;
+  overdue: number;
+  paidThisYear: number;
+  monthlyRevenue: MonthlyRevenueDto[];
+  recentInvoices: InvoiceListItemDto[];
+}
+
 export interface InvoiceListItemDto {
   id: string;
   number?: number | null;

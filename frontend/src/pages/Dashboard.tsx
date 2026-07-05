@@ -2,10 +2,33 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { api, ApiError } from "../api/client";
-import type { BillingDto, InvitationDto, MemberDto, ReminderSettingsDto } from "../api/types";
+import type { BillingDto, DashboardDto, InvitationDto, MemberDto, ReminderSettingsDto } from "../api/types";
 import { Nav } from "../components/Nav";
-import { Button, Card, ErrorText, Field, Input } from "../components/ui";
+import { RevenueChart } from "../components/RevenueChart";
+import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
+
+const kr = (n: number) => `${n.toLocaleString("sv-SE")} kr`;
+
+function StatTile({ label, value, emphasize }: { label: string; value: number; emphasize?: boolean }) {
+  return (
+    <Card style={{ flex: 1, minWidth: 170, padding: tokens.space.md }}>
+      <div style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: tokens.font.size.xl,
+          fontWeight: 700,
+          fontVariantNumeric: "tabular-nums",
+          color: emphasize && value > 0 ? tokens.color.accent : tokens.color.text,
+        }}
+      >
+        {kr(value)}
+      </div>
+    </Card>
+  );
+}
 
 export function Dashboard() {
   const { user, organization } = useAuth();
@@ -24,6 +47,7 @@ export function Dashboard() {
     queryFn: () => api.get<BillingDto>("/api/billing"),
     enabled: isOwner,
   });
+  const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: () => api.get<DashboardDto>("/api/dashboard") });
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("Member");
@@ -69,6 +93,38 @@ export function Dashboard() {
       <span style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.md}` }}>
         {user?.email} · {user?.role} · Plan: {organization?.plan}
       </span>
+
+      {dashboard.data && (
+        <>
+          <div style={{ display: "flex", gap: tokens.space.md, flexWrap: "wrap" }}>
+            <StatTile label="Utestående" value={dashboard.data.outstanding} />
+            <StatTile label="Förfallet" value={dashboard.data.overdue} emphasize />
+            <StatTile label="Betalt i år" value={dashboard.data.paidThisYear} />
+          </div>
+
+          <Card>
+            <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Omsättning per månad</h2>
+            <RevenueChart data={dashboard.data.monthlyRevenue} />
+          </Card>
+
+          {dashboard.data.recentInvoices.length > 0 && (
+            <Card>
+              <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Senaste fakturor</h2>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {dashboard.data.recentInvoices.map((inv) => (
+                  <li key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: tokens.space.sm, borderTop: tokens.line.perforated }}>
+                    <span style={{ fontWeight: 600 }}>Faktura {inv.number ?? "—"}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: tokens.space.md }}>
+                      <Badge status={inv.status} />
+                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{kr(inv.gross)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </>
+      )}
 
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Medlemmar</h2>

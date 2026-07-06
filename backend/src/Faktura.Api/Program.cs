@@ -165,6 +165,7 @@ app.MapInvoiceEndpoints();
 app.MapArticleEndpoints();
 app.MapRecurringEndpoints();
 app.MapAuditEndpoints();
+app.MapProfileEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

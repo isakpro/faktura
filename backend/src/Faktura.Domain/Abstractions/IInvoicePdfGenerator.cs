@@ -1,4 +1,5 @@
 using Faktura.Domain.Invoicing;
+using Faktura.Domain.Organizations;
 
 namespace Faktura.Domain.Abstractions;
 
@@ -6,6 +7,6 @@ namespace Faktura.Domain.Abstractions;
 public interface IInvoicePdfGenerator
 {
     /// <param name="invoice">Skickad faktura eller kreditfaktura.</param>
-    /// <param name="sellerName">Säljarens (organisationens) namn.</param>
-    byte[] Generate(Invoice invoice, string sellerName);
+    /// <param name="seller">Säljande organisation — namn + ev. fakturaprofil (orgnr, adress, betalningsuppgifter).</param>
+    byte[] Generate(Invoice invoice, Organization? seller);
 }

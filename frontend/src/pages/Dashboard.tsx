@@ -204,6 +204,8 @@ export function Dashboard() {
 
       {canManage && <ReminderSettingsCard />}
 
+      {canManage && <ProfileCard />}
+
       {canManage && <ActivityCard />}
     </div>
   );
@@ -246,6 +248,68 @@ function ReminderSettingsCard() {
         </label>
         <Button onClick={() => save.mutate()} disabled={save.isPending}>Spara</Button>
         {save.isSuccess && <span style={{ color: tokens.color.success, fontSize: tokens.font.size.sm }}>Sparat.</span>}
+      </div>
+    </Card>
+  );
+}
+
+function ProfileCard() {
+  const qc = useQueryClient();
+  const profile = useQuery({
+    queryKey: ["organization-profile"],
+    queryFn: () => api.get<Record<string, string | boolean | null>>("/api/organization-profile"),
+  });
+
+  const [form, setForm] = useState<Record<string, string | boolean | null> | null>(null);
+  const current = form ?? profile.data ?? {};
+  const set = (key: string, value: string | boolean) =>
+    setForm({ ...(form ?? profile.data ?? {}), [key]: value });
+  const str = (key: string) => String(current[key] ?? "");
+
+  const save = useMutation({
+    mutationFn: () => api.put("/api/organization-profile", {
+      orgNumber: str("orgNumber") || null,
+      addressLine: str("addressLine") || null,
+      postalCode: str("postalCode") || null,
+      city: str("city") || null,
+      bankgiro: str("bankgiro") || null,
+      plusgiro: str("plusgiro") || null,
+      fSkatt: Boolean(current["fSkatt"]),
+    }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["organization-profile"] }),
+  });
+
+  const fields: Array<[string, string, number]> = [
+    ["orgNumber", "Org.nr", 130],
+    ["addressLine", "Adress", 200],
+    ["postalCode", "Postnr", 90],
+    ["city", "Ort", 130],
+    ["bankgiro", "Bankgiro", 120],
+    ["plusgiro", "Plusgiro", 120],
+  ];
+
+  return (
+    <Card>
+      <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Fakturaprofil</h2>
+      <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.sm}` }}>
+        Säljaruppgifterna som visas på fakturans PDF.
+      </p>
+      <div style={{ display: "flex", gap: tokens.space.sm, alignItems: "end", flexWrap: "wrap" }}>
+        {fields.map(([key, label, width]) => (
+          <div key={key} style={{ width }}>
+            <Field label={label}>
+              <Input value={str(key)} onChange={(e) => set(key, e.target.value)} />
+            </Field>
+          </div>
+        ))}
+        <label style={{ display: "flex", alignItems: "center", gap: tokens.space.sm, marginBottom: tokens.space.md }}>
+          <input type="checkbox" checked={Boolean(current["fSkatt"])} onChange={(e) => set("fSkatt", e.target.checked)} />
+          Godkänd för F-skatt
+        </label>
+        <div style={{ marginBottom: tokens.space.md }}>
+          <Button onClick={() => save.mutate()} disabled={save.isPending}>Spara</Button>
+        </div>
+        {save.isSuccess && <span style={{ color: tokens.color.success, fontSize: tokens.font.size.sm, marginBottom: tokens.space.md }}>Sparat.</span>}
       </div>
     </Card>
   );

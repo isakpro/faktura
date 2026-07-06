@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, openAuthed } from "../api/client";
 import type { ArticleDto, CustomerDto, InvoiceDto, InvoiceLineInput, InvoiceListItemDto } from "../api/types";
@@ -155,7 +156,11 @@ export function Invoices() {
           <tbody>
             {invoices.data?.map((inv) => (
               <tr key={inv.id} style={{ borderTop: `1px solid ${tokens.color.border}` }}>
-                <td style={{ padding: tokens.space.sm }}>{inv.number ?? "—"}</td>
+                <td style={{ padding: tokens.space.sm }}>
+                  <Link to={`/invoices/${inv.id}`} style={{ color: tokens.color.text, fontWeight: 700, textDecoration: "underline" }}>
+                    {inv.number ?? "utkast"}
+                  </Link>
+                </td>
                 <td>{customerName(inv.customerId)}</td>
                 <td><Badge status={inv.status} /></td>
                 <td style={{ textAlign: "right" }}>{kr(inv.gross)}</td>

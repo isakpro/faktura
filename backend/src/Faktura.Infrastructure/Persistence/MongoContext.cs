@@ -32,6 +32,7 @@ public sealed class MongoContext
     internal IMongoCollection<ReminderSettingsDocument> ReminderSettings => _database.GetCollection<ReminderSettingsDocument>("reminderSettings");
     internal IMongoCollection<ArticleDocument> Articles => _database.GetCollection<ArticleDocument>("articles");
     internal IMongoCollection<RecurringInvoiceDocument> RecurringInvoices => _database.GetCollection<RecurringInvoiceDocument>("recurringInvoices");
+    internal IMongoCollection<AuditEntryDocument> AuditLog => _database.GetCollection<AuditEntryDocument>("auditLog");
 
     /// <summary>Pingar databasen — används av readiness-hälsokontrollen.</summary>
     public Task PingAsync(CancellationToken ct = default)
@@ -99,6 +100,11 @@ public sealed class MongoContext
             new CreateIndexModel<InvoiceReminderDocument>(
                 Builders<InvoiceReminderDocument>.IndexKeys.Ascending(r => r.TenantId).Ascending(r => r.InvoiceId),
                 new CreateIndexOptions { Name = "ix_reminder_tenant_invoice" }), cancellationToken: ct);
+
+        await AuditLog.Indexes.CreateOneAsync(
+            new CreateIndexModel<AuditEntryDocument>(
+                Builders<AuditEntryDocument>.IndexKeys.Ascending(a => a.TenantId).Descending(a => a.OccurredAt),
+                new CreateIndexOptions { Name = "ix_audit_tenant_time" }), cancellationToken: ct);
 
         await RecurringInvoices.Indexes.CreateOneAsync(
             new CreateIndexModel<RecurringInvoiceDocument>(

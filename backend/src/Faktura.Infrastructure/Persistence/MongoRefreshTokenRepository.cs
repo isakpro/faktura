@@ -20,6 +20,12 @@ internal sealed class MongoRefreshTokenRepository : IRefreshTokenRepository
         return doc?.ToDomain();
     }
 
+    public Task RevokeAllForUserAsync(string tenantId, string userId, DateTime when, CancellationToken ct = default)
+        => _context.RefreshTokens.UpdateManyAsync(
+            r => r.TenantId == tenantId && r.UserId == userId && r.RevokedAt == null,
+            Builders<RefreshTokenDocument>.Update.Set(r => r.RevokedAt, when),
+            cancellationToken: ct);
+
     public Task UpdateAsync(RefreshTokenRecord record, CancellationToken ct = default)
         => _context.RefreshTokens.ReplaceOneAsync(
             r => r.Id == record.Id,

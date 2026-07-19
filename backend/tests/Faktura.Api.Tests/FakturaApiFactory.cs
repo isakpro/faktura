@@ -48,6 +48,8 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IOrganizationRepository, InMemoryOrganizationRepository>();
             services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
             services.AddSingleton<IInvitationRepository, InMemoryInvitationRepository>();
+            services.RemoveAll<IPasswordResetRepository>();
+            services.AddSingleton<IPasswordResetRepository, InMemoryPasswordResetRepository>();
 
             // Billing: fake gateway/parser/idempotency store (no real Stripe in tests).
             services.RemoveAll<IBillingGateway>();

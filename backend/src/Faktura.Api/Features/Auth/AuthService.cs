@@ -2,6 +2,7 @@ using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Domain.Common;
 using Faktura.Domain.Emailing;
+using Faktura.Infrastructure.Configuration;
 using Faktura.Infrastructure.Email;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,6 +26,9 @@ public sealed class AuthService
     private readonly TokenIssuer _issuer;
     private readonly IEmailSender _email;
     private readonly SmtpOptions _smtp;
+    private readonly IPasswordResetRepository _resets;
+    private readonly IIdGenerator _ids;
+    private readonly AppOptions _app;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
@@ -39,8 +43,14 @@ public sealed class AuthService
         TokenIssuer issuer,
         IEmailSender email,
         IOptions<SmtpOptions> smtp,
+        IPasswordResetRepository resets,
+        IIdGenerator ids,
+        IOptions<AppOptions> app,
         ILogger<AuthService> logger)
     {
+        _resets = resets;
+        _ids = ids;
+        _app = app.Value;
         _users = users;
         _organizations = organizations;
         _refreshTokens = refreshTokens;
@@ -137,6 +147,76 @@ public sealed class AuthService
         await _refreshTokens.UpdateAsync(record, ct);
 
         return Result.Success(await _issuer.IssuePairAsync(user, organization, ct));
+    }
+
+    /// <summary>
+    /// Glömt lösenord (spec 011): svarar ALLTID likadant — finns kontot (och adressen inte är
+    /// bromsad) mejlas en engångslänk. Ingen skillnad utåt ⇒ ingen enumerering.
+    /// </summary>
+    public async Task ForgotPasswordAsync(string? rawEmail, CancellationToken ct)
+    {
+        var email = EmailAddress.Create(rawEmail);
+        if (email.IsFailure) return; // generiskt 202 även för ogiltigt format
+
+        var key = $"forgot:{email.Value.Value}";
+        if (_throttle.IsBlocked(key, out _)) return; // tyst — svaret förblir generiskt
+        _throttle.RecordFailure(key);
+
+        var user = await _users.GetByEmailAsync(email.Value.Value, ct);
+        if (user is null) return;
+
+        var token = _tokens.CreateRefreshToken(); // slumpad engångstoken + hash
+        await _resets.AddAsync(PasswordResetToken.Issue(_ids.NewId(), user.TenantId, user.Id, token.Hash, _clock.UtcNow), ct);
+
+        try
+        {
+            var resetUrl = $"{_app.BaseUrl.TrimEnd('/')}/reset/{token.Raw}";
+            await _email.SendAsync(new EmailMessage(
+                FromAddress: _smtp.FromAddress,
+                FromDisplayName: "Faktura",
+                ReplyTo: null,
+                To: user.Email,
+                Subject: "Återställ ditt lösenord",
+                Body: $"Hej,\n\nKlicka på länken för att välja ett nytt lösenord (giltig i 1 timme):\n\n{resetUrl}\n\n" +
+                      "Har du inte begärt detta kan du bortse från mejlet.\n\nVänliga hälsningar,\nFaktura",
+                Attachment: null), ct);
+            _logger.LogInformation("Password reset email sent to {Email}", user.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send password reset email to {Email}", user.Email);
+        }
+    }
+
+    /// <summary>Sätter nytt lösenord via engångstoken; förbrukar token och dödar alla refresh-tokens.</summary>
+    public async Task<Result> ResetPasswordAsync(string? rawToken, string? newPassword, CancellationToken ct)
+    {
+        var policy = PasswordPolicy.Validate(newPassword);
+        if (policy.IsFailure) return policy;
+
+        if (string.IsNullOrWhiteSpace(rawToken))
+            return Result.Failure(Error.Validation("Länken är ogiltig eller har gått ut."));
+
+        var now = _clock.UtcNow;
+        var reset = await _resets.GetByHashAsync(_tokens.HashRefreshToken(rawToken), ct);
+        if (reset is null || !reset.IsActive(now))
+            return Result.Failure(Error.Validation("Länken är ogiltig eller har gått ut."));
+
+        var user = await _users.GetByIdAsync(reset.TenantId, reset.UserId, ct);
+        if (user is null)
+            return Result.Failure(Error.Validation("Länken är ogiltig eller har gått ut."));
+
+        user.SetPasswordHash(_passwordHasher.Hash(newPassword!));
+        await _users.UpdateAsync(user, ct);
+
+        reset.MarkUsed(now);
+        await _resets.UpdateAsync(reset, ct);
+
+        // Stulna/gamla sessioner dör: alla användarens refresh-tokens återkallas (FR-003).
+        await _refreshTokens.RevokeAllForUserAsync(reset.TenantId, reset.UserId, now, ct);
+
+        _logger.LogInformation("Password reset completed for user {UserId}", user.Id);
+        return Result.Success();
     }
 
     /// <summary>Varningsmejl vid registreringsförsök mot upptagen adress. Fel sväljs (FR-002).</summary>

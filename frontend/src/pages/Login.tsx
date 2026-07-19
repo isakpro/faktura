@@ -45,6 +45,7 @@ export function Login() {
         </form>
         <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginBottom: 0 }}>
           Ny här? <Link to="/signup" style={{ color: tokens.color.primary }}>Skapa organisation</Link>
+          {" · "}<Link to="/forgot" style={{ color: tokens.color.textMuted }}>Glömt lösenord?</Link>
         </p>
       </Card>
     </div>

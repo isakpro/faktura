@@ -10,4 +10,7 @@ public interface IRefreshTokenRepository
     Task<RefreshTokenRecord?> GetByHashAsync(string tokenHash, CancellationToken ct = default);
 
     Task UpdateAsync(RefreshTokenRecord record, CancellationToken ct = default);
+
+    /// <summary>Återkallar användarens samtliga aktiva refresh-tokens (lösenordsbyte, spec 011).</summary>
+    Task RevokeAllForUserAsync(string tenantId, string userId, DateTime when, CancellationToken ct = default);
 }

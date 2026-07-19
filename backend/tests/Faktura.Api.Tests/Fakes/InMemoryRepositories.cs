@@ -120,4 +120,31 @@ public sealed class InMemoryRefreshTokenRepository : IRefreshTokenRepository
         _tokens[record.Id] = record;
         return Task.CompletedTask;
     }
+
+    public Task RevokeAllForUserAsync(string tenantId, string userId, DateTime when, CancellationToken ct = default)
+    {
+        foreach (var r in _tokens.Values.Where(r => r.TenantId == tenantId && r.UserId == userId))
+            r.Revoke(when);
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class InMemoryPasswordResetRepository : IPasswordResetRepository
+{
+    private readonly ConcurrentDictionary<string, PasswordResetToken> _items = new();
+
+    public Task AddAsync(PasswordResetToken token, CancellationToken ct = default)
+    {
+        _items[token.Id] = token;
+        return Task.CompletedTask;
+    }
+
+    public Task<PasswordResetToken?> GetByHashAsync(string tokenHash, CancellationToken ct = default)
+        => Task.FromResult(_items.Values.FirstOrDefault(t => t.TokenHash == tokenHash));
+
+    public Task UpdateAsync(PasswordResetToken token, CancellationToken ct = default)
+    {
+        _items[token.Id] = token;
+        return Task.CompletedTask;
+    }
 }

@@ -33,6 +33,7 @@ public sealed class MongoContext
     internal IMongoCollection<ArticleDocument> Articles => _database.GetCollection<ArticleDocument>("articles");
     internal IMongoCollection<RecurringInvoiceDocument> RecurringInvoices => _database.GetCollection<RecurringInvoiceDocument>("recurringInvoices");
     internal IMongoCollection<AuditEntryDocument> AuditLog => _database.GetCollection<AuditEntryDocument>("auditLog");
+    internal IMongoCollection<PasswordResetDocument> PasswordResets => _database.GetCollection<PasswordResetDocument>("passwordResets");
 
     /// <summary>Pingar databasen — används av readiness-hälsokontrollen.</summary>
     public Task PingAsync(CancellationToken ct = default)
@@ -100,6 +101,16 @@ public sealed class MongoContext
             new CreateIndexModel<InvoiceReminderDocument>(
                 Builders<InvoiceReminderDocument>.IndexKeys.Ascending(r => r.TenantId).Ascending(r => r.InvoiceId),
                 new CreateIndexOptions { Name = "ix_reminder_tenant_invoice" }), cancellationToken: ct);
+
+        await PasswordResets.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<PasswordResetDocument>(
+                Builders<PasswordResetDocument>.IndexKeys.Ascending(p => p.TokenHash),
+                new CreateIndexOptions { Unique = true, Name = "ux_pwreset_hash" }),
+            new CreateIndexModel<PasswordResetDocument>(
+                Builders<PasswordResetDocument>.IndexKeys.Ascending(p => p.ExpiresAt),
+                new CreateIndexOptions { Name = "ttl_pwreset_expires", ExpireAfter = TimeSpan.Zero })
+        }, ct);
 
         await AuditLog.Indexes.CreateOneAsync(
             new CreateIndexModel<AuditEntryDocument>(

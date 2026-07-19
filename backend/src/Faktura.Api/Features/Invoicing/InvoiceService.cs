@@ -147,7 +147,7 @@ public sealed class InvoiceService
         if (invoice.Number is null) return Result.Failure<InvoicePdf>(Error.InvalidState()); // utkast har ingen PDF
 
         var org = await _organizations.GetByIdAsync(_tenant.TenantId, ct);
-        var bytes = _pdf.Generate(invoice, org?.Name ?? "");
+        var bytes = _pdf.Generate(invoice, org);
         var prefix = invoice.Type == InvoiceType.CreditNote ? "kreditfaktura" : "faktura";
         return Result.Success(new InvoicePdf(bytes, $"{prefix}-{invoice.Number}.pdf"));
     }

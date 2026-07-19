@@ -31,6 +31,7 @@ function stubFetchRoutes() {
         ? { outstanding: 0, overdue: 0, paidThisYear: 0, monthlyRevenue: [], recentInvoices: [] } :
       path.includes("/api/invitations") ? [] :
       path.includes("/api/audit") ? [] :
+      path.includes("/api/organization-profile") ? {} :
       path.includes("/api/billing") ? { plan: "Free", subscriptionStatus: "None", seatLimit: 2 } :
       path.includes("/api/reminder-settings") ? { autoEnabled: false, daysAfterDue: 7 } :
       {};

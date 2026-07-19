@@ -15,6 +15,11 @@ public sealed class Organization
     public int SeatLimit { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>Säljaruppgifter för fakturans PDF (spec 009). Null tills profilen fylls i.</summary>
+    public InvoiceProfile? Profile { get; private set; }
+
+    public void UpdateProfile(InvoiceProfile profile) => Profile = profile;
+
     // For persistence hydration.
     public Organization(
         string id,
@@ -24,8 +29,10 @@ public sealed class Organization
         string? stripeCustomerId,
         string? stripeSubscriptionId,
         int seatLimit,
-        DateTime createdAt)
+        DateTime createdAt,
+        InvoiceProfile? profile = null)
     {
+        Profile = profile;
         Id = id;
         Name = name;
         Plan = plan;

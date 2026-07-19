@@ -23,6 +23,9 @@ internal sealed class OrganizationDocument
     public int SeatLimit { get; set; }
     public DateTime CreatedAt { get; set; }
 
+    [BsonIgnoreIfNull]
+    public InvoiceProfileDocument? Profile { get; set; }
+
     public static OrganizationDocument FromDomain(Organization o) => new()
     {
         Id = o.Id,
@@ -32,9 +35,35 @@ internal sealed class OrganizationDocument
         StripeCustomerId = o.StripeCustomerId,
         StripeSubscriptionId = o.StripeSubscriptionId,
         SeatLimit = o.SeatLimit,
-        CreatedAt = o.CreatedAt
+        CreatedAt = o.CreatedAt,
+        Profile = InvoiceProfileDocument.FromDomain(o.Profile)
     };
 
     public Organization ToDomain() => new(
-        Id, Name, Plan, SubscriptionStatus, StripeCustomerId, StripeSubscriptionId, SeatLimit, CreatedAt);
+        Id, Name, Plan, SubscriptionStatus, StripeCustomerId, StripeSubscriptionId, SeatLimit, CreatedAt,
+        Profile?.ToDomain());
+}
+
+internal sealed class InvoiceProfileDocument
+{
+    public string? OrgNumber { get; set; }
+    public string? AddressLine { get; set; }
+    public string? PostalCode { get; set; }
+    public string? City { get; set; }
+    public string? Bankgiro { get; set; }
+    public string? Plusgiro { get; set; }
+    public bool FSkatt { get; set; }
+
+    public static InvoiceProfileDocument? FromDomain(InvoiceProfile? p) => p is null ? null : new()
+    {
+        OrgNumber = p.OrgNumber,
+        AddressLine = p.AddressLine,
+        PostalCode = p.PostalCode,
+        City = p.City,
+        Bankgiro = p.Bankgiro,
+        Plusgiro = p.Plusgiro,
+        FSkatt = p.FSkatt
+    };
+
+    public InvoiceProfile ToDomain() => new(OrgNumber, AddressLine, PostalCode, City, Bankgiro, Plusgiro, FSkatt);
 }

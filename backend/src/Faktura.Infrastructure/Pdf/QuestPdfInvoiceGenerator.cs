@@ -1,12 +1,13 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Invoicing;
+using Faktura.Domain.Organizations;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace Faktura.Infrastructure.Pdf;
 
-/// <summary>Renderar en faktura/kreditfaktura till PDF med QuestPDF.</summary>
+/// <summary>Renderar en faktura/kreditfaktura till PDF med QuestPDF, inkl. säljarens fakturaprofil.</summary>
 internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
 {
     static QuestPdfInvoiceGenerator()
@@ -15,11 +16,13 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public byte[] Generate(Invoice invoice, string sellerName)
+    public byte[] Generate(Invoice invoice, Organization? seller)
     {
         var totals = invoice.Totals;
         var title = invoice.Type == InvoiceType.CreditNote ? "Kreditfaktura" : "Faktura";
         var buyer = invoice.CustomerSnapshot?.Name ?? "";
+        var sellerName = seller?.Name ?? "";
+        var profile = seller?.Profile;
 
         var document = Document.Create(container =>
         {
@@ -34,6 +37,10 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
                     row.RelativeItem().Column(col =>
                     {
                         col.Item().Text(sellerName).Bold().FontSize(16);
+                        if (profile?.AddressLine is { } line) col.Item().Text(line);
+                        if (profile?.PostalCode is not null || profile?.City is not null)
+                            col.Item().Text($"{profile?.PostalCode} {profile?.City}".Trim());
+                        if (profile?.OrgNumber is { } orgNr) col.Item().Text($"Org.nr {orgNr}");
                     });
                     row.ConstantItem(180).Column(col =>
                     {
@@ -89,9 +96,18 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
                     });
                 });
 
-                page.Footer().AlignCenter().Text(x =>
+                page.Footer().AlignCenter().Column(footer =>
                 {
-                    x.Span("Faktura genererad av Faktura.").FontColor(Colors.Grey.Medium);
+                    var paymentParts = new List<string>();
+                    if (profile?.Bankgiro is { } bg) paymentParts.Add($"Bankgiro {bg}");
+                    if (profile?.Plusgiro is { } pg) paymentParts.Add($"Plusgiro {pg}");
+                    if (profile?.OrgNumber is { } nr) paymentParts.Add($"Org.nr {nr}");
+                    if (profile?.FSkatt == true) paymentParts.Add("Godkänd för F-skatt");
+
+                    if (paymentParts.Count > 0)
+                        footer.Item().AlignCenter().Text(string.Join("  ·  ", paymentParts)).FontSize(9);
+                    footer.Item().AlignCenter().Text(t =>
+                        t.Span("Faktura genererad av Faktura.").FontColor(Colors.Grey.Medium).FontSize(8));
                 });
             });
         });

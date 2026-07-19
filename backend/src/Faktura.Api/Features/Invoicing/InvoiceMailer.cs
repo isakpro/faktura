@@ -57,7 +57,7 @@ public sealed class InvoiceMailer
             Subject: subject,
             Body: body,
             Attachment: new EmailAttachment($"{docName.ToLowerInvariant()}-{invoice.Number}.pdf", "application/pdf",
-                _pdf.Generate(invoice, sellerName)));
+                _pdf.Generate(invoice, org)));
 
         try
         {

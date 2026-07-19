@@ -63,7 +63,7 @@ public sealed class ReminderMailer
             Subject: subject,
             Body: body,
             Attachment: new EmailAttachment($"faktura-{invoice.Number}.pdf", "application/pdf",
-                _pdf.Generate(invoice, sellerName)));
+                _pdf.Generate(invoice, org)));
 
         try
         {

@@ -9,6 +9,7 @@ import { Customers } from "./pages/Customers";
 import { Articles } from "./pages/Articles";
 import { Invoices } from "./pages/Invoices";
 import { Recurring } from "./pages/Recurring";
+import { InvoiceDetail } from "./pages/InvoiceDetail";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/articles" element={<Protected><Articles /></Protected>} />
       <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
       <Route path="/recurring" element={<Protected><Recurring /></Protected>} />
+      <Route path="/invoices/:id" element={<Protected><InvoiceDetail /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

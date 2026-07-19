@@ -58,7 +58,19 @@ tenant-isolerat), `GET /api/audit` (Owner/Admin), Aktivitet-kort med svenska eti
 (`/health`, `/health/ready` med Mongo-ping), Docker Compose (api+mongo+mailpit+web; curl i
 api-imagen för healthcheck), **E2E (Playwright) i CI** mot compose-stacken, README-överhalning.
 
-Testläge: 147 backend (76 domän + 71 API) + 3 Testcontainers (CI) + 7 vitest + 1 Playwright-E2E.
-Ingen aktiv feature. Kvar: skarp deploy (kräver användarens konton: Render/Cloudflare/Atlas +
-GitHub Secrets), uppföljning e-post-enumerering vid register (kräver clarify).
+**Levererat: 009 — Fakturaprofil & fakturadetaljvy**: `InvoiceProfile` på Organization (orgnr,
+adress, bankgiro/plusgiro, F-skatt) renderas på PDF:ns säljarblock + sidfot (bakåtkompatibelt),
+`GET/PUT /api/organization-profile` (Owner/Admin skriver), detaljvy `/invoices/{id}` (rader,
+summor per momssats, e-post-/påminnelsehistorik, PDF-knapp) + Fakturaprofil-kort på Översikt.
+**Levererat: 010 — Kontoflöden via e-post**: registreringsbroms per adress ("register:"-nyckel i
+`ILoginThrottle`, 429 + Retry-After) + varningsmejl till adressens ägare (beslut: auto-login
+behålls); inbjudningar mejlas med accept-länk (`App__BaseUrl`/accept/{token}, Reply-To =
+inbjudaren; mejlfel stoppar aldrig inbjudan).
+
+Testläge: 152 backend (76 domän + 76 API) + 3 Testcontainers (CI) + 7 vitest + 1 Playwright-E2E.
+**Release v0.6.0** på `main` (001–010 + infra-chores). Ingen aktiv feature.
+Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas + GitHub Secrets) samt
+B-listan: glömt lösenord, Dependabot, branch protection, design-granskning i webbläsare.
+Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans, refresh-tokens i
+localStorage, delkreditering.
 <!-- SPECKIT END -->

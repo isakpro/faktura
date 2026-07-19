@@ -1,0 +1,26 @@
+# Automatiska beroendeuppdateringar — en PR-grupp per ekosystem, veckovis.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      nuget-alla:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      npm-alla:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

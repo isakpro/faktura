@@ -10,6 +10,8 @@ import { Articles } from "./pages/Articles";
 import { Invoices } from "./pages/Invoices";
 import { Recurring } from "./pages/Recurring";
 import { InvoiceDetail } from "./pages/InvoiceDetail";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -26,6 +28,8 @@ export default function App() {
       <Route path="/login" element={status === "authed" ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup" element={status === "authed" ? <Navigate to="/" replace /> : <Signup />} />
       <Route path="/accept/:token" element={<AcceptInvite />} />
+      <Route path="/forgot" element={<ForgotPassword />} />
+      <Route path="/reset/:token" element={<ResetPassword />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/customers" element={<Protected><Customers /></Protected>} />
       <Route path="/articles" element={<Protected><Articles /></Protected>} />

@@ -11,10 +11,12 @@ namespace Faktura.Api.Tests.Fakes;
 public sealed class FakeEmailSender : IEmailSender
 {
     public EmailMessage? LastMessage { get; private set; }
+    public int SentCount { get; private set; }
 
     public Task SendAsync(EmailMessage message, CancellationToken ct = default)
     {
         LastMessage = message;
+        SentCount++;
         if (message.To.StartsWith("fail@", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("SMTP fail (test)");
         return Task.CompletedTask;

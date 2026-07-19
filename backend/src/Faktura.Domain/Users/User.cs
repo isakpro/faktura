@@ -41,6 +41,9 @@ public sealed class User
     public static User CreateMember(string id, string tenantId, string normalizedEmail, string passwordHash, UserRole role, DateTime now)
         => new(id, tenantId, normalizedEmail, passwordHash, role, UserStatus.Active, now);
 
-    /// <summary>Changes the user's role (authorization is enforced by <see cref="MembershipRules"/>).</summary>
+    /// <summary>Byter lösenordshash (lösenordsåterställning, spec 011).</summary>
+    public void SetPasswordHash(string passwordHash) => PasswordHash = passwordHash;
+
+    /// <summary>Changes the user’s role (authorization is enforced by <see cref="MembershipRules"/>).</summary>
     public void ChangeRole(UserRole role) => Role = role;
 }

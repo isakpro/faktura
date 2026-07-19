@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IArticleRepository, MongoArticleRepository>();
         services.AddScoped<IRecurringInvoiceRepository, MongoRecurringInvoiceRepository>();
         services.AddScoped<IAuditLogRepository, MongoAuditLogRepository>();
+        services.AddScoped<IPasswordResetRepository, MongoPasswordResetRepository>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

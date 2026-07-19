@@ -29,6 +29,19 @@ public static class AuthEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : ToProblem(result.Error);
         });
 
+        auth.MapPost("/forgot-password", async (ForgotPasswordRequest req, AuthService svc, CancellationToken ct) =>
+        {
+            await svc.ForgotPasswordAsync(req.Email, ct);
+            // Alltid samma svar — inga ledtrådar om kontot finns (spec 011).
+            return Results.Accepted(value: new { message = "Om kontot finns har ett mejl skickats." });
+        });
+
+        auth.MapPost("/reset-password", async (ResetPasswordRequest req, AuthService svc, CancellationToken ct) =>
+        {
+            var result = await svc.ResetPasswordAsync(req.Token, req.Password, ct);
+            return result.IsSuccess ? Results.NoContent() : ToProblem(result.Error);
+        });
+
         auth.MapPost("/logout", async (RefreshRequest req, AuthService svc, CancellationToken ct) =>
         {
             await svc.LogoutAsync(req.RefreshToken, ct);

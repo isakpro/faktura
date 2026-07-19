@@ -29,6 +29,19 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
       role="img"
       aria-label={`Omsättning per månad: ${data.map((m) => `${MONTHS[m.month - 1]} ${kr(m.gross)}`).join(", ")}`}
     >
+      {/* Recessiva stödlinjer (50 % och 100 % av max) — ger plotten struktur även med gles data. */}
+      {[0.5, 1].map((f) => (
+        <line
+          key={f}
+          x1={0}
+          x2={width}
+          y1={topZone + plotHeight * (1 - f)}
+          y2={topZone + plotHeight * (1 - f)}
+          stroke={tokens.color.border}
+          strokeWidth={1}
+          strokeDasharray="2 4"
+        />
+      ))}
       {data.map((m, i) => {
         const barHeight = max === 0 ? 0 : (m.gross / max) * plotHeight;
         const x = i * (barWidth + barGap);

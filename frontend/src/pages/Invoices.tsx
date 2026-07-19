@@ -9,7 +9,7 @@ import { tokens } from "../theme/tokens";
 
 const VAT_RATES = [25, 12, 6, 0];
 const emptyLine = (): InvoiceLineInput => ({ description: "", quantity: 1, unitPriceExclVat: 0, vatRate: 25, unit: null });
-const kr = (n: number) => `${n.toFixed(2)} kr`;
+const kr = (n: number) => `${n.toLocaleString("sv-SE", { minimumFractionDigits: 2 })} kr`;
 
 const selectStyle = {
   background: tokens.color.bg,

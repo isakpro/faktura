@@ -48,6 +48,7 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
                         col.Item().AlignRight().Text($"Nr: {invoice.Number}");
                         col.Item().AlignRight().Text($"Datum: {invoice.InvoiceDate:yyyy-MM-dd}");
                         col.Item().AlignRight().Text($"Förfaller: {invoice.DueDate:yyyy-MM-dd}");
+                        if (invoice.OcrNumber is { } ocr) col.Item().AlignRight().Text($"OCR: {ocr}").Bold();
                     });
                 });
 
@@ -99,6 +100,7 @@ internal sealed class QuestPdfInvoiceGenerator : IInvoicePdfGenerator
                 page.Footer().AlignCenter().Column(footer =>
                 {
                     var paymentParts = new List<string>();
+                    if (invoice.OcrNumber is { } ocrRef) paymentParts.Add($"OCR {ocrRef}");
                     if (profile?.Bankgiro is { } bg) paymentParts.Add($"Bankgiro {bg}");
                     if (profile?.Plusgiro is { } pg) paymentParts.Add($"Plusgiro {pg}");
                     if (profile?.OrgNumber is { } nr) paymentParts.Add($"Org.nr {nr}");

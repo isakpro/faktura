@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceNumberSequence, MongoInvoiceNumberSequence>();
         services.AddSingleton<IInvoicePdfGenerator, QuestPdfInvoiceGenerator>();
         services.AddScoped<IInvoiceEmailRepository, MongoInvoiceEmailRepository>();
+        services.AddScoped<IInvoicePaymentRepository, MongoInvoicePaymentRepository>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IInvoiceReminderRepository, MongoInvoiceReminderRepository>();
         services.AddScoped<IReminderSettingsRepository, MongoReminderSettingsRepository>();

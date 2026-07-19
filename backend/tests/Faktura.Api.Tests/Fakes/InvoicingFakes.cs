@@ -51,6 +51,22 @@ public sealed class InMemoryInvoiceRepository : IInvoiceRepository
     }
 }
 
+public sealed class InMemoryInvoicePaymentRepository : IInvoicePaymentRepository
+{
+    private readonly ConcurrentDictionary<string, InvoicePayment> _items = new();
+
+    public Task AddAsync(InvoicePayment payment, CancellationToken ct = default)
+    {
+        _items[payment.Id] = payment;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<InvoicePayment>> ListByInvoiceAsync(string tenantId, string invoiceId, CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyList<InvoicePayment>>(
+            _items.Values.Where(p => p.TenantId == tenantId && p.InvoiceId == invoiceId)
+                .OrderByDescending(p => p.PaidDate).ThenByDescending(p => p.CreatedAt).ToList());
+}
+
 /// <summary>Atomisk nummerserie i minne (AddOrUpdate är trådsäker per nyckel).</summary>
 public sealed class InMemoryInvoiceNumberSequence : IInvoiceNumberSequence
 {

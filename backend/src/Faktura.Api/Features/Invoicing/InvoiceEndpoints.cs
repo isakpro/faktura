@@ -43,12 +43,25 @@ public static class InvoiceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
-        group.MapPost("/{id}/credit", async (string id, InvoiceService svc, CancellationToken ct) =>
+        // Body är valfri: utan radval krediteras hela fakturan (bakåtkompatibelt).
+        group.MapPost("/{id}/credit", async (string id, CreditRequest? req, InvoiceService svc, CancellationToken ct) =>
         {
-            var result = await svc.CreditAsync(id, ct);
+            var result = await svc.CreditAsync(id, req, ct);
             return result.IsSuccess
                 ? Results.Created($"/api/invoices/{result.Value.Id}", result.Value)
                 : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        group.MapPost("/{id}/payments", async (string id, RegisterPaymentRequest req, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.RegisterPaymentAsync(id, req, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        group.MapGet("/{id}/payments", async (string id, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.ListPaymentsAsync(id, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
         group.MapGet("/{id}/pdf", async (string id, InvoiceService svc, CancellationToken ct) =>

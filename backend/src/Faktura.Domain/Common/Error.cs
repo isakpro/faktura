@@ -40,4 +40,7 @@ public sealed record Error(string Code, string Message, int? RetryAfterSeconds =
 
     // Artikelregister (spec 005).
     public static Error SkuTaken() => new("sku_taken", "Artikelnumret används redan i organisationen.");
+
+    // Betalningsreskontra (spec 012).
+    public static Error OverPayment() => new("over_payment", "Beloppet överstiger kvarvarande saldo på fakturan.");
 }

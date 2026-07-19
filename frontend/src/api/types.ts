@@ -101,6 +101,17 @@ export interface InvoiceDto {
   originalInvoiceId?: string | null;
   lines: InvoiceLineDto[];
   totals: InvoiceTotalsDto;
+  ocrNumber?: string | null;
+  paidAmount: number;
+  remainingAmount: number;
+}
+
+export interface PaymentDto {
+  id: string;
+  amount: number;
+  paidDate: string;
+  note?: string | null;
+  createdAt: string;
 }
 
 export interface ReminderSettingsDto {

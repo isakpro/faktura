@@ -59,10 +59,11 @@ export function Nav() {
           {link("/articles", "Artiklar")}
           {link("/invoices", "Fakturor")}
           {link("/recurring", "Abonnemang")}
+          {link("/settings", "Inställningar")}
         </nav>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: tokens.space.md, paddingBottom: "8px" }}>
-        <strong style={{ fontFamily: tokens.font.display, fontSize: tokens.font.size.md }}>
+        <strong style={{ fontFamily: tokens.font.display, fontSize: tokens.font.size.md, whiteSpace: "nowrap", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
           {organization?.name}
         </strong>
         <Button onClick={logout} style={{ background: tokens.color.surfaceAlt, borderColor: tokens.color.surfaceAlt }}>

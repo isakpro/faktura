@@ -93,4 +93,20 @@ describe("App auth-flöde", () => {
     expect(await screen.findByText("Acme AB")).toBeTruthy();
     expect(screen.queryByRole("heading", { name: "Logga in" })).toBeNull();
   });
+
+  it("inställningar: sidan visar administrationskorten", async () => {
+    localStorage.setItem("faktura.access", "stored-token");
+
+    renderApp();
+    await screen.findByText("Acme AB");
+    fireEvent.click(screen.getByRole("link", { name: "Inställningar" }));
+
+    expect(await screen.findByRole("heading", { name: "Medlemmar" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Plan & fakturering" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Fakturaprofil" })).toBeTruthy();
+    // Översikten ska inte längre bära administrationen.
+    fireEvent.click(screen.getByRole("link", { name: "Översikt" }));
+    await screen.findByText("Utestående");
+    expect(screen.queryByRole("heading", { name: "Medlemmar" })).toBeNull();
+  });
 });

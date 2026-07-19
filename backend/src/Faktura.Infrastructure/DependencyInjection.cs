@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.Configure<ThrottleOptions>(config.GetSection(ThrottleOptions.SectionName));
         services.Configure<StripeOptions>(config.GetSection(StripeOptions.SectionName));
         services.Configure<SmtpOptions>(config.GetSection(SmtpOptions.SectionName));
+        services.Configure<AppOptions>(config.GetSection(AppOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, ObjectIdGenerator>();

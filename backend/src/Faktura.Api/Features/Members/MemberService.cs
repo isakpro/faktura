@@ -2,8 +2,12 @@ using Faktura.Api.Features.Auth;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Domain.Common;
+using Faktura.Domain.Emailing;
 using Faktura.Domain.Users;
+using Faktura.Infrastructure.Configuration;
+using Faktura.Infrastructure.Email;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Faktura.Api.Features.Members;
 
@@ -25,6 +29,9 @@ public sealed class MemberService
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
     private readonly TokenIssuer _issuer;
+    private readonly IEmailSender _email;
+    private readonly SmtpOptions _smtp;
+    private readonly AppOptions _app;
     private readonly ILogger<MemberService> _logger;
 
     public MemberService(
@@ -37,6 +44,9 @@ public sealed class MemberService
         IIdGenerator ids,
         IClock clock,
         TokenIssuer issuer,
+        IEmailSender email,
+        IOptions<SmtpOptions> smtp,
+        IOptions<AppOptions> app,
         ILogger<MemberService> logger)
     {
         _tenant = tenant;
@@ -48,6 +58,9 @@ public sealed class MemberService
         _ids = ids;
         _clock = clock;
         _issuer = issuer;
+        _email = email;
+        _smtp = smtp.Value;
+        _app = app.Value;
         _logger = logger;
     }
 
@@ -93,8 +106,32 @@ public sealed class MemberService
         if (invitation.IsFailure) return Result.Failure<InviteResponse>(invitation.Error);
 
         await _invitations.AddAsync(invitation.Value, ct);
+        await SendInvitationEmailAsync(normalizedEmail, role, organization.Name, token.Raw, ct);
         _logger.LogInformation("Invitation created for {Email} in tenant {TenantId}", normalizedEmail, _tenant.TenantId);
         return Result.Success(new InviteResponse(ToDto(invitation.Value), token.Raw));
+    }
+
+    /// <summary>Mejlar accept-länken till den inbjudna. Mejlfel stoppar aldrig inbjudan (spec 010 FR-003).</summary>
+    private async Task SendInvitationEmailAsync(string email, UserRole role, string organizationName, string rawToken, CancellationToken ct)
+    {
+        try
+        {
+            var acceptUrl = $"{_app.BaseUrl.TrimEnd('/')}/accept/{rawToken}";
+            await _email.SendAsync(new EmailMessage(
+                FromAddress: _smtp.FromAddress,
+                FromDisplayName: organizationName,
+                ReplyTo: _tenant.Email,
+                To: email,
+                Subject: $"Du har bjudits in till {organizationName} i Faktura",
+                Body: $"Hej,\n\nDu har bjudits in som {(role == UserRole.Admin ? "administratör" : "medlem")} " +
+                      $"i {organizationName}. Skapa ditt konto här:\n\n{acceptUrl}\n\n" +
+                      $"Länken gäller i 7 dagar.\n\nVänliga hälsningar,\n{organizationName}",
+                Attachment: null), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to email invitation to {Email}", email);
+        }
     }
 
     public async Task<Result<AuthResponse>> AcceptAsync(string rawToken, AcceptInvitationRequest request, CancellationToken ct)

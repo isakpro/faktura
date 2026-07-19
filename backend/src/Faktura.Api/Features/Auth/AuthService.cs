@@ -1,7 +1,10 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Authentication;
 using Faktura.Domain.Common;
+using Faktura.Domain.Emailing;
+using Faktura.Infrastructure.Email;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Faktura.Api.Features.Auth;
 
@@ -20,6 +23,8 @@ public sealed class AuthService
     private readonly IClock _clock;
     private readonly ILoginThrottle _throttle;
     private readonly TokenIssuer _issuer;
+    private readonly IEmailSender _email;
+    private readonly SmtpOptions _smtp;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
@@ -32,6 +37,8 @@ public sealed class AuthService
         IClock clock,
         ILoginThrottle throttle,
         TokenIssuer issuer,
+        IEmailSender email,
+        IOptions<SmtpOptions> smtp,
         ILogger<AuthService> logger)
     {
         _users = users;
@@ -43,6 +50,8 @@ public sealed class AuthService
         _clock = clock;
         _throttle = throttle;
         _issuer = issuer;
+        _email = email;
+        _smtp = smtp.Value;
         _logger = logger;
     }
 
@@ -54,9 +63,21 @@ public sealed class AuthService
 
         var (organization, owner) = (built.Value.Organization, built.Value.Owner);
 
-        // Uniqueness is enforced here (domain stays pure). Do not leak whether the account exists.
+        // Enumereringsskydd (spec 010): upprepade försök mot samma adress bromsas,
+        // och adressens ägare varnas per mejl. Auto-login för nya konton behålls.
+        var throttleKey = $"register:{owner.Email}";
+        if (_throttle.IsBlocked(throttleKey, out var retryAfter))
+        {
+            _logger.LogWarning("Registration blocked by throttle for {Email}", owner.Email);
+            return Result.Failure<AuthResponse>(Error.TooManyAttempts(retryAfter));
+        }
+
         if (await _users.EmailExistsAsync(owner.Email, ct))
+        {
+            _throttle.RecordFailure(throttleKey);
+            await SendRegistrationWarningAsync(owner.Email, ct);
             return Result.Failure<AuthResponse>(Error.EmailAlreadyInUse());
+        }
 
         await _organizations.AddAsync(organization, ct);
         await _users.AddAsync(owner, ct);
@@ -116,6 +137,29 @@ public sealed class AuthService
         await _refreshTokens.UpdateAsync(record, ct);
 
         return Result.Success(await _issuer.IssuePairAsync(user, organization, ct));
+    }
+
+    /// <summary>Varningsmejl vid registreringsförsök mot upptagen adress. Fel sväljs (FR-002).</summary>
+    private async Task SendRegistrationWarningAsync(string email, CancellationToken ct)
+    {
+        try
+        {
+            await _email.SendAsync(new EmailMessage(
+                FromAddress: _smtp.FromAddress,
+                FromDisplayName: "Faktura",
+                ReplyTo: null,
+                To: email,
+                Subject: "Registreringsförsök med din e-postadress",
+                Body: "Hej,\n\nNågon försökte just registrera en ny organisation i Faktura med din " +
+                      "e-postadress. Om det var du: logga in på ditt befintliga konto i stället. " +
+                      "Om det inte var du kan du bortse från det här mejlet — inget konto har skapats.\n\n" +
+                      "Vänliga hälsningar,\nFaktura",
+                Attachment: null), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send registration warning to {Email}", email);
+        }
     }
 
     public async Task LogoutAsync(string rawRefreshToken, CancellationToken ct)

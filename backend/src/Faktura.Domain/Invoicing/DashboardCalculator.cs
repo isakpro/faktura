@@ -26,15 +26,16 @@ public static class DashboardCalculator
 
         foreach (var invoice in real)
         {
-            var gross = invoice.Totals.Gross.Amount;
             if (invoice.Status == InvoiceStatus.Sent)
             {
-                outstanding += gross;
-                if (invoice.IsOverdue(today)) overdue += gross;
+                // Kvarvarande saldo, inte brutto — delbetalningar räknas av (spec 012).
+                var remaining = invoice.RemainingAmount;
+                outstanding += remaining;
+                if (invoice.IsOverdue(today)) overdue += remaining;
             }
             else if (invoice.Status == InvoiceStatus.Paid && invoice.PaidDate?.Year == today.Year)
             {
-                paidThisYear += gross;
+                paidThisYear += invoice.Totals.Gross.Amount;
             }
         }
 

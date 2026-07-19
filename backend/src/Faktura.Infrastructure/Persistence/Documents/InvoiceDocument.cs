@@ -79,6 +79,10 @@ internal sealed class InvoiceDocument : ITenantDocument
 
     [BsonRepresentation(BsonType.Decimal128)] public decimal CreditedAmount { get; set; }
 
+    // Spec 012 — saknas på äldre dokument: OCR blir null och betalt belopp 0 (bakåtkompatibelt).
+    [BsonIgnoreIfNull] public string? OcrNumber { get; set; }
+    [BsonRepresentation(BsonType.Decimal128)] public decimal PaidAmount { get; set; }
+
     public List<InvoiceLineDocument> Lines { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -101,6 +105,8 @@ internal sealed class InvoiceDocument : ITenantDocument
         OriginalInvoiceId = i.OriginalInvoiceId,
         RecurringSourceId = i.RecurringSourceId,
         CreditedAmount = i.CreditedAmount,
+        OcrNumber = i.OcrNumber,
+        PaidAmount = i.PaidAmount,
         Lines = i.Lines.Select(InvoiceLineDocument.FromDomain).ToList(),
         CreatedAt = i.CreatedAt,
         UpdatedAt = i.UpdatedAt
@@ -109,5 +115,5 @@ internal sealed class InvoiceDocument : ITenantDocument
     public Invoice ToDomain() => new(
         Id, TenantId, CustomerId, CustomerSnapshot?.ToDomain(), Type, Status, Number,
         ToDate(InvoiceDate), ToDate(DueDate), ToDate(PaidDate), OriginalInvoiceId, CreditedAmount,
-        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt, RecurringSourceId);
+        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt, RecurringSourceId, OcrNumber, PaidAmount);
 }

@@ -14,12 +14,13 @@ public sealed class InvoiceService
     private readonly IInvoiceNumberSequence _numbers;
     private readonly IInvoicePdfGenerator _pdf;
     private readonly IOrganizationRepository _organizations;
+    private readonly IInvoicePaymentRepository _payments;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
 
     public InvoiceService(ITenantContext tenant, IInvoiceRepository invoices, ICustomerRepository customers,
         IInvoiceNumberSequence numbers, IInvoicePdfGenerator pdf, IOrganizationRepository organizations,
-        IIdGenerator ids, IClock clock)
+        IInvoicePaymentRepository payments, IIdGenerator ids, IClock clock)
     {
         _tenant = tenant;
         _invoices = invoices;
@@ -27,6 +28,7 @@ public sealed class InvoiceService
         _numbers = numbers;
         _pdf = pdf;
         _organizations = organizations;
+        _payments = payments;
         _ids = ids;
         _clock = clock;
     }
@@ -106,36 +108,61 @@ public sealed class InvoiceService
         return Result.Success(ToDto(invoice));
     }
 
-    public async Task<Result<InvoiceDto>> MarkPaidAsync(string id, DateOnly paidDate, CancellationToken ct)
-    {
-        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
-        if (invoice is null) return Result.Failure<InvoiceDto>(Error.NotFound());
+    /// <summary>"Betald"-knappen: socker för att betala hela kvarvarande saldot — via reskontran.</summary>
+    public Task<Result<InvoiceDto>> MarkPaidAsync(string id, DateOnly paidDate, CancellationToken ct)
+        => WithInvoiceAsync(id, ct, invoice =>
+            RegisterPaymentInternalAsync(invoice, invoice.RemainingAmount, paidDate, note: null, ct));
 
-        var result = invoice.MarkPaid(paidDate, _clock.UtcNow);
+    public Task<Result<InvoiceDto>> RegisterPaymentAsync(string id, RegisterPaymentRequest req, CancellationToken ct)
+        => WithInvoiceAsync(id, ct, invoice =>
+            RegisterPaymentInternalAsync(invoice, req.Amount, req.PaidDate ?? Today, req.Note, ct));
+
+    private async Task<Result<InvoiceDto>> RegisterPaymentInternalAsync(
+        Invoice invoice, decimal amount, DateOnly paidDate, string? note, CancellationToken ct)
+    {
+        var result = invoice.RegisterPayment(amount, paidDate, _clock.UtcNow);
         if (result.IsFailure) return Result.Failure<InvoiceDto>(result.Error);
 
+        await _payments.AddAsync(
+            new InvoicePayment(_ids.NewId(), _tenant.TenantId, invoice.Id, amount, paidDate, note, _clock.UtcNow), ct);
         await _invoices.UpdateAsync(invoice, ct);
         return Result.Success(ToDto(invoice));
     }
 
-    public async Task<Result<InvoiceDto>> CreditAsync(string id, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<PaymentDto>>> ListPaymentsAsync(string id, CancellationToken ct)
+    {
+        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        if (invoice is null) return Result.Failure<IReadOnlyList<PaymentDto>>(Error.NotFound());
+
+        var payments = await _payments.ListByInvoiceAsync(_tenant.TenantId, id, ct);
+        return Result.Success<IReadOnlyList<PaymentDto>>(
+            payments.Select(p => new PaymentDto(p.Id, p.Amount, p.PaidDate, p.Note, p.CreatedAt)).ToList());
+    }
+
+    public async Task<Result<InvoiceDto>> CreditAsync(string id, CreditRequest? req, CancellationToken ct)
     {
         var original = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
         if (original is null) return Result.Failure<InvoiceDto>(Error.NotFound());
 
-        // Validera INNAN ett nummer förbrukas, så serien inte får hopp vid nekad kreditering.
-        if (original.Type != InvoiceType.Invoice || original.Status == InvoiceStatus.Draft)
-            return Result.Failure<InvoiceDto>(Error.InvalidState());
-        var remaining = original.RemainingCreditable;
-        if (remaining <= 0) return Result.Failure<InvoiceDto>(Error.OverCredit());
+        // Validera radval INNAN ett nummer förbrukas, så serien inte får hopp vid nekad kreditering.
+        var selections = req?.Lines?.Select(l => new CreditSelection(l.Index, l.Quantity)).ToList();
+        var creditLines = original.BuildCreditLines(selections);
+        if (creditLines.IsFailure) return Result.Failure<InvoiceDto>(creditLines.Error);
 
         var number = await _numbers.NextAsync(_tenant.TenantId, ct);
-        var creditNote = Invoice.CreateCreditNote(_ids.NewId(), original, number, Today, _clock.UtcNow);
-        original.RegisterCredit(remaining, _clock.UtcNow);
+        var creditNote = Invoice.CreateCreditNote(_ids.NewId(), original, number, Today, _clock.UtcNow, creditLines.Value);
+        original.RegisterCredit(-creditNote.Totals.Gross.Amount, _clock.UtcNow);
 
         await _invoices.AddAsync(creditNote, ct);
         await _invoices.UpdateAsync(original, ct);
         return Result.Success(ToDto(creditNote));
+    }
+
+    private async Task<Result<InvoiceDto>> WithInvoiceAsync(
+        string id, CancellationToken ct, Func<Invoice, Task<Result<InvoiceDto>>> action)
+    {
+        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        return invoice is null ? Result.Failure<InvoiceDto>(Error.NotFound()) : await action(invoice);
     }
 
     public sealed record InvoicePdf(byte[] Bytes, string FileName);
@@ -164,7 +191,10 @@ public sealed class InvoiceService
         return Result.Success(lines);
     }
 
-    private string EffectiveStatus(Invoice i) => i.IsOverdue(Today) ? "Overdue" : i.Status.ToString();
+    private string EffectiveStatus(Invoice i) =>
+        i.IsOverdue(Today) ? "Overdue"
+        : i.Status == InvoiceStatus.Sent && i.PaidAmount > 0 ? "PartiallyPaid"
+        : i.Status.ToString();
 
     private InvoiceDto ToDto(Invoice i)
     {
@@ -173,7 +203,8 @@ public sealed class InvoiceService
             i.Id, i.Type.ToString(), EffectiveStatus(i), i.Number, i.CustomerId,
             i.InvoiceDate, i.DueDate, i.PaidDate, i.OriginalInvoiceId,
             i.Lines.Select(l => new InvoiceLineDto(l.Description, l.Quantity, l.UnitPriceExclVat, (int)l.VatRate, l.Net.Amount, l.Vat.Amount, l.Unit)).ToList(),
-            new InvoiceTotalsDto(t.Net.Amount, t.VatByRate.Select(v => new VatByRateDto(v.RatePercent, v.Vat.Amount)).ToList(), t.Gross.Amount));
+            new InvoiceTotalsDto(t.Net.Amount, t.VatByRate.Select(v => new VatByRateDto(v.RatePercent, v.Vat.Amount)).ToList(), t.Gross.Amount),
+            i.OcrNumber, i.PaidAmount, i.RemainingAmount);
     }
 
     private InvoiceListItemDto ToListItem(Invoice i) =>

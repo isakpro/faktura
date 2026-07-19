@@ -91,6 +91,7 @@ export function ErrorText({ children }: { children: ReactNode }) {
 const badgeColors: Record<string, string> = {
   Draft: tokens.color.textMuted,
   Sent: tokens.color.primary,
+  PartiallyPaid: tokens.color.primary,
   Overdue: tokens.color.accent,
   Paid: tokens.color.success,
   Credited: tokens.color.textMuted,
@@ -103,6 +104,7 @@ const badgeColors: Record<string, string> = {
 const badgeLabels: Record<string, string> = {
   Draft: "UTKAST",
   Sent: "SKICKAD",
+  PartiallyPaid: "DELBETALD",
   Overdue: "FÖRFALLEN",
   Paid: "BETALD",
   Credited: "KREDITERAD",

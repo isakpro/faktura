@@ -67,10 +67,21 @@ summor per momssats, e-post-/påminnelsehistorik, PDF-knapp) + Fakturaprofil-kor
 behålls); inbjudningar mejlas med accept-länk (`App__BaseUrl`/accept/{token}, Reply-To =
 inbjudaren; mejlfel stoppar aldrig inbjudan).
 
-Testläge: 152 backend (76 domän + 76 API) + 3 Testcontainers (CI) + 7 vitest + 1 Playwright-E2E.
-**Release v0.7.0** på `main` (001–010 + infra-chores; v0.6.0 = t.o.m. 008/README). Ingen aktiv feature.
-Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas + GitHub Secrets) samt
-B-listan: glömt lösenord, Dependabot, branch protection, design-granskning i webbläsare.
-Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans, refresh-tokens i
-localStorage, delkreditering.
+**Levererat: 011 — Glömt lösenord** + Dependabot + design-polish (egen Inställningar-sida,
+ren Översikt, sv-SE-belopp, graf-stödlinjer). Branch protection blockerad (kräver Pro/publikt repo).
+**Levererat: 012 — Betalningsreskontra, OCR & delkreditering**: `OcrReference` (bankgirostandard,
+Luhn + längdsiffra) sätts vid skick → DTO/PDF; `invoicePayments`-reskontra
+(`POST/GET /invoices/{id}/payments`, status DELBETALD härledd, saldo i dashboard/detaljvy,
+"Betald"-knappen betalar saldot via reskontran); delkreditering via radval i
+`POST /invoices/{id}/credit` (validering före nummerförbrukning).
+
+**Roadmap (användaren valde alla)**: 013 kundportal (publik fakturalänk) → 014 Peppol UBL →
+015 SIE4-export → 016 publikt API + webhooks → 017 SignalR → 018 Redis rate limiting →
+019 server-side sök/paginering.
+
+Testläge: 190 backend (100 domän + 90 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
+release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
+GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,
+refresh-tokens i localStorage.
 <!-- SPECKIT END -->

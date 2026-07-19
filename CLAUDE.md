@@ -68,7 +68,7 @@ behålls); inbjudningar mejlas med accept-länk (`App__BaseUrl`/accept/{token}, 
 inbjudaren; mejlfel stoppar aldrig inbjudan).
 
 Testläge: 152 backend (76 domän + 76 API) + 3 Testcontainers (CI) + 7 vitest + 1 Playwright-E2E.
-**Release v0.6.0** på `main` (001–010 + infra-chores). Ingen aktiv feature.
+**Release v0.7.0** på `main` (001–010 + infra-chores; v0.6.0 = t.o.m. 008/README). Ingen aktiv feature.
 Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas + GitHub Secrets) samt
 B-listan: glömt lösenord, Dependabot, branch protection, design-granskning i webbläsare.
 Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans, refresh-tokens i

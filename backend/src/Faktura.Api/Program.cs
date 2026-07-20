@@ -3,18 +3,22 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Faktura.Api.Auth;
 using Faktura.Api.Features.Accounting;
+using Faktura.Api.Features.ApiKeys;
 using Faktura.Api.Features.Articles;
 using Faktura.Api.Features.Auth;
 using Faktura.Api.Features.Billing;
 using Faktura.Api.Features.Customers;
 using Faktura.Api.Features.Invoicing;
 using Faktura.Api.Features.Members;
+using Faktura.Api.Features.PublicApi;
+using Faktura.Api.Features.Webhooks;
 using Faktura.Api.Health;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Organizations;
 using Faktura.Infrastructure;
 using Faktura.Infrastructure.Persistence;
 using Faktura.Infrastructure.Security;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -67,7 +71,8 @@ if (!builder.Environment.IsEnvironment("Testing"))
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+    .AddJwtBearer()
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, _ => { });
 
 // Configure JwtBearer from JwtOptions via DI so the signing key is read from the fully
 // merged configuration at runtime (inline reads would miss test/host config added at Build).
@@ -180,6 +185,9 @@ app.MapRecurringEndpoints();
 app.MapAuditEndpoints();
 app.MapProfileEndpoints();
 app.MapSieExportEndpoints();
+app.MapApiKeyEndpoints();
+app.MapWebhookManagementEndpoints();
+app.MapPublicApiEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

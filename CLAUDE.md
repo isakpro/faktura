@@ -94,10 +94,18 @@ balanserar exakt, radbelopp grupperas direkt från fakturans rader så krediteri
 belopp ger automatisk motbokning. `GET /api/export/sie?year=` (Owner/Admin, ISO-8859-1 `.se`-fil)
 + Export-sida (årsväljare) länkad från Inställningar.
 
-**Roadmap (användaren valde alla)**: 016 publikt API + webhooks → 017 SignalR →
-018 Redis rate limiting → 019 server-side sök/paginering.
+**Levererat: 016 — Publikt API & webhooks**: API-nycklar (`fkt_live_…`, SHA-256-hash lagrad,
+scopes `invoices:read`/`customers:read`/`customers:write`) autentiserar via `X-Api-Key` genom en
+egen `ApiKeyAuthenticationHandler`-scheme som bygger samma claims som JWT — `/api/v1/invoices`
+och `/api/v1/customers` återanvänder därför InvoiceService/CustomerService oförändrade, bara
+scope-gated. Utgående webhooks (`invoice.sent`/`.paid`/`.credited`, HMAC-SHA256-signerade,
+en retry, leveranslogg) via `IWebhookDispatcher` injicerad i InvoiceService. Hantering av nycklar
++ mottagare (Owner/Admin) på ny Utvecklare-sida länkad från Inställningar.
 
-Testläge: 218 backend (112 domän + 103 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 017 SignalR → 018 Redis rate limiting →
+019 server-side sök/paginering.
+
+Testläge: 231 backend (117 domän + 114 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
 GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,

@@ -97,6 +97,17 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             // Återkommande fakturor (007).
             services.RemoveAll<IRecurringInvoiceRepository>();
             services.AddSingleton<IRecurringInvoiceRepository, InMemoryRecurringInvoiceRepository>();
+
+            // Publikt API + webhooks (016): in-memory nycklar/mottagare + fångad dispatch (ingen riktig HTTP).
+            services.RemoveAll<IApiKeyRepository>();
+            services.AddSingleton<IApiKeyRepository, InMemoryApiKeyRepository>();
+            services.RemoveAll<IWebhookEndpointRepository>();
+            services.AddSingleton<IWebhookEndpointRepository, InMemoryWebhookEndpointRepository>();
+            services.RemoveAll<IWebhookDeliveryRepository>();
+            services.AddSingleton<IWebhookDeliveryRepository, InMemoryWebhookDeliveryRepository>();
+            services.RemoveAll<IWebhookDispatcher>();
+            services.AddSingleton<InMemoryWebhookDispatcher>();
+            services.AddSingleton<IWebhookDispatcher>(sp => sp.GetRequiredService<InMemoryWebhookDispatcher>());
         });
     }
 }

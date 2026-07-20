@@ -160,6 +160,16 @@ export function Settings() {
           <Button onClick={() => navigate("/export")}>Gå till export</Button>
         </Card>
       )}
+
+      {canManage && (
+        <Card>
+          <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Utvecklare</h2>
+          <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.sm}` }}>
+            API-nycklar och webhooks för att integrera med Fakturas publika API.
+          </p>
+          <Button onClick={() => navigate("/developer")}>Gå till utvecklarsidan</Button>
+        </Card>
+      )}
     </div>
   );
 }

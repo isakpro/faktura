@@ -35,6 +35,9 @@ public sealed class MongoContext
     internal IMongoCollection<AuditEntryDocument> AuditLog => _database.GetCollection<AuditEntryDocument>("auditLog");
     internal IMongoCollection<PasswordResetDocument> PasswordResets => _database.GetCollection<PasswordResetDocument>("passwordResets");
     internal IMongoCollection<InvoicePaymentDocument> InvoicePayments => _database.GetCollection<InvoicePaymentDocument>("invoicePayments");
+    internal IMongoCollection<ApiKeyDocument> ApiKeys => _database.GetCollection<ApiKeyDocument>("apiKeys");
+    internal IMongoCollection<WebhookEndpointDocument> WebhookEndpoints => _database.GetCollection<WebhookEndpointDocument>("webhookEndpoints");
+    internal IMongoCollection<WebhookDeliveryDocument> WebhookDeliveries => _database.GetCollection<WebhookDeliveryDocument>("webhookDeliveries");
 
     /// <summary>Pingar databasen — används av readiness-hälsokontrollen.</summary>
     public Task PingAsync(CancellationToken ct = default)
@@ -106,6 +109,26 @@ public sealed class MongoContext
             new CreateIndexModel<InvoiceEmailDocument>(
                 Builders<InvoiceEmailDocument>.IndexKeys.Ascending(e => e.TenantId).Ascending(e => e.InvoiceId),
                 new CreateIndexOptions { Name = "ix_invoiceemail_tenant_invoice" }), cancellationToken: ct);
+
+        await ApiKeys.Indexes.CreateManyAsync(new[]
+        {
+            new CreateIndexModel<ApiKeyDocument>(
+                Builders<ApiKeyDocument>.IndexKeys.Ascending(k => k.KeyHash),
+                new CreateIndexOptions { Name = "ux_apikey_hash", Unique = true }),
+            new CreateIndexModel<ApiKeyDocument>(
+                Builders<ApiKeyDocument>.IndexKeys.Ascending(k => k.TenantId),
+                new CreateIndexOptions { Name = "ix_apikey_tenant" })
+        }, ct);
+
+        await WebhookEndpoints.Indexes.CreateOneAsync(
+            new CreateIndexModel<WebhookEndpointDocument>(
+                Builders<WebhookEndpointDocument>.IndexKeys.Ascending(e => e.TenantId),
+                new CreateIndexOptions { Name = "ix_webhookendpoint_tenant" }), cancellationToken: ct);
+
+        await WebhookDeliveries.Indexes.CreateOneAsync(
+            new CreateIndexModel<WebhookDeliveryDocument>(
+                Builders<WebhookDeliveryDocument>.IndexKeys.Ascending(d => d.TenantId).Ascending(d => d.EndpointId),
+                new CreateIndexOptions { Name = "ix_webhookdelivery_tenant_endpoint" }), cancellationToken: ct);
 
         await InvoicePayments.Indexes.CreateOneAsync(
             new CreateIndexModel<InvoicePaymentDocument>(

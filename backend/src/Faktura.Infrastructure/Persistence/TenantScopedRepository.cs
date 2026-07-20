@@ -41,4 +41,7 @@ internal abstract class TenantScopedRepository<TDoc> where TDoc : ITenantDocumen
 
     protected Task<long> CountAsync(string tenantId, FilterDefinition<TDoc> extra, CancellationToken ct) =>
         Collection.CountDocumentsAsync(Builders<TDoc>.Filter.And(TenantFilter(tenantId), extra), cancellationToken: ct);
+
+    protected Task DeleteByIdAsync(string tenantId, string id, CancellationToken ct) =>
+        Collection.DeleteOneAsync(ById(tenantId, id), ct);
 }

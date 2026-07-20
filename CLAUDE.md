@@ -81,10 +81,16 @@ i klartext på dokumentet — medvetet beslut, dokumenterat i specen), `POST /in
 publika endpoints `GET /api/public/invoices/{token}(/pdf)` utan auth (IP-rate-limit-partition
 för `/api/public`), "papperslik" portalsida + Kundlänk-knapp (urklipp) i detaljvyn.
 
-**Roadmap (användaren valde alla)**: 014 Peppol UBL → 015 SIE4-export → 016 publikt API +
-webhooks → 017 SignalR → 018 Redis rate limiting → 019 server-side sök/paginering.
+**Levererat: 014 — Peppol UBL-export**: `PeppolInvoiceGenerator` (ren domänklass, `XDocument`)
+bygger UBL 2.1 enligt BIS Billing 3.0 (EN 16931) — `Invoice`/`CreditNote`-rot beroende på typ,
+säljare från fakturaprofilen, köpare från kundens ögonblicksbild, rader/momsuppdelning/summor
+spårbart identiska med `InvoiceCalculator`. `GET /invoices/{id}/peppol` (auktoriserad,
+409 för utkast) + "Peppol-XML"-knapp i detaljvyn.
 
-Testläge: 198 backend (101 domän + 97 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 015 SIE4-export → 016 publikt API + webhooks →
+017 SignalR → 018 Redis rate limiting → 019 server-side sök/paginering.
+
+Testläge: 206 backend (106 domän + 100 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
 GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,

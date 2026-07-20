@@ -193,6 +193,21 @@ public sealed class InvoiceService
         return Result.Success(new InvoicePdf(bytes, $"{prefix}-{invoice.Number}.pdf"));
     }
 
+    public sealed record InvoicePeppolXml(string Xml, string FileName);
+
+    /// <summary>UBL 2.1 / Peppol BIS Billing 3.0-export (spec 014).</summary>
+    public async Task<Result<InvoicePeppolXml>> GeneratePeppolAsync(string id, CancellationToken ct)
+    {
+        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        if (invoice is null) return Result.Failure<InvoicePeppolXml>(Error.NotFound());
+        if (invoice.Number is null) return Result.Failure<InvoicePeppolXml>(Error.InvalidState()); // utkast saknar UBL
+
+        var org = await _organizations.GetByIdAsync(_tenant.TenantId, ct);
+        var xml = PeppolInvoiceGenerator.Generate(invoice, org).ToString();
+        var prefix = invoice.Type == InvoiceType.CreditNote ? "kreditfaktura" : "faktura";
+        return Result.Success(new InvoicePeppolXml(xml, $"{prefix}-{invoice.Number}-peppol.xml"));
+    }
+
     private static Result<List<InvoiceLine>> ToLines(IEnumerable<InvoiceLineInput> inputs)
     {
         var lines = new List<InvoiceLine>();

@@ -79,6 +79,14 @@ public static class InvoiceEndpoints
                 : AuthEndpoints.ToProblem(result.Error);
         });
 
+        group.MapGet("/{id}/peppol", async (string id, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.GeneratePeppolAsync(id, ct);
+            return result.IsSuccess
+                ? Results.File(System.Text.Encoding.UTF8.GetBytes(result.Value.Xml), "application/xml", result.Value.FileName)
+                : AuthEndpoints.ToProblem(result.Error);
+        });
+
         group.MapPost("/{id}/email", async (string id, SendEmailRequest req, EmailService svc, CancellationToken ct) =>
         {
             var result = await svc.SendAsync(id, req.Recipient, ct);

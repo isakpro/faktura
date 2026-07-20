@@ -82,6 +82,11 @@ export function InvoiceDetail() {
                     PDF
                   </Button>
                 )}
+                {inv.number != null && (
+                  <Button onClick={() => openAuthed(`/api/invoices/${inv.id}/peppol`)} style={{ background: tokens.color.surfaceAlt, borderColor: tokens.color.surfaceAlt }}>
+                    Peppol-XML
+                  </Button>
+                )}
                 {inv.type === "Invoice" && inv.number != null && <ShareButton invoiceId={inv.id} />}
               </div>
             </div>

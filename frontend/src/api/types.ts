@@ -119,6 +119,34 @@ export interface ShareLinkDto {
   token: string;
 }
 
+export interface ApiKeyDto {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  createdAt: string;
+  lastUsedAt?: string | null;
+}
+
+export interface CreatedApiKeyDto {
+  id: string;
+  name: string;
+  key: string;
+  scopes: string[];
+}
+
+export interface WebhookEndpointDto {
+  id: string;
+  url: string;
+  createdAt: string;
+}
+
+export interface CreatedWebhookDto {
+  id: string;
+  url: string;
+  secret: string;
+}
+
 export interface PublicSellerDto {
   name: string;
   orgNumber?: string | null;

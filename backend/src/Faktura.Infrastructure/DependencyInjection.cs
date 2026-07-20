@@ -7,6 +7,7 @@ using Faktura.Infrastructure.Configuration;
 using Faktura.Infrastructure.Pdf;
 using Faktura.Infrastructure.Persistence;
 using Faktura.Infrastructure.Security;
+using Faktura.Infrastructure.Webhooks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -51,6 +52,11 @@ public static class DependencyInjection
         services.AddScoped<IRecurringInvoiceRepository, MongoRecurringInvoiceRepository>();
         services.AddScoped<IAuditLogRepository, MongoAuditLogRepository>();
         services.AddScoped<IPasswordResetRepository, MongoPasswordResetRepository>();
+        services.AddScoped<IApiKeyRepository, MongoApiKeyRepository>();
+        services.AddScoped<IWebhookEndpointRepository, MongoWebhookEndpointRepository>();
+        services.AddScoped<IWebhookDeliveryRepository, MongoWebhookDeliveryRepository>();
+        services.AddHttpClient("webhooks", c => c.Timeout = TimeSpan.FromSeconds(5));
+        services.AddScoped<IWebhookDispatcher, HttpWebhookDispatcher>();
 
         services.AddSingleton<IBillingGateway, StripeBillingGateway>();
         services.AddSingleton<IWebhookEventParser, StripeWebhookEventParser>();

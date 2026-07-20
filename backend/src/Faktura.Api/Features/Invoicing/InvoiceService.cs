@@ -16,14 +16,16 @@ public sealed class InvoiceService
     private readonly IOrganizationRepository _organizations;
     private readonly IInvoicePaymentRepository _payments;
     private readonly PortalLinks _portal;
+    private readonly IWebhookDispatcher _webhooks;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
 
     public InvoiceService(ITenantContext tenant, IInvoiceRepository invoices, ICustomerRepository customers,
         IInvoiceNumberSequence numbers, IInvoicePdfGenerator pdf, IOrganizationRepository organizations,
-        IInvoicePaymentRepository payments, PortalLinks portal, IIdGenerator ids, IClock clock)
+        IInvoicePaymentRepository payments, PortalLinks portal, IWebhookDispatcher webhooks, IIdGenerator ids, IClock clock)
     {
         _portal = portal;
+        _webhooks = webhooks;
         _tenant = tenant;
         _invoices = invoices;
         _customers = customers;
@@ -34,6 +36,15 @@ public sealed class InvoiceService
         _ids = ids;
         _clock = clock;
     }
+
+    /// <summary>Publikt webhook-payload för fakturahändelser (spec 016) — stabil form, oberoende av InvoiceDto.</summary>
+    private sealed record InvoiceEventPayload(string InvoiceId, long? Number, string Type, string Status,
+        string CustomerName, decimal Gross, string Currency);
+
+    private Task DispatchInvoiceEventAsync(string eventType, Invoice invoice, CancellationToken ct) =>
+        _webhooks.DispatchAsync(_tenant.TenantId, eventType,
+            new InvoiceEventPayload(invoice.Id, invoice.Number, invoice.Type.ToString(), EffectiveStatus(invoice),
+                invoice.CustomerSnapshot?.Name ?? "", invoice.Totals.Gross.Amount, "SEK"), ct);
 
     private DateOnly Today => DateOnly.FromDateTime(_clock.UtcNow);
 
@@ -107,6 +118,7 @@ public sealed class InvoiceService
         if (result.IsFailure) return Result.Failure<InvoiceDto>(result.Error);
 
         await _invoices.UpdateAsync(invoice, ct);
+        await DispatchInvoiceEventAsync("invoice.sent", invoice, ct);
         return Result.Success(ToDto(invoice));
     }
 
@@ -128,6 +140,7 @@ public sealed class InvoiceService
         await _payments.AddAsync(
             new InvoicePayment(_ids.NewId(), _tenant.TenantId, invoice.Id, amount, paidDate, note, _clock.UtcNow), ct);
         await _invoices.UpdateAsync(invoice, ct);
+        if (invoice.Status == InvoiceStatus.Paid) await DispatchInvoiceEventAsync("invoice.paid", invoice, ct);
         return Result.Success(ToDto(invoice));
     }
 
@@ -157,6 +170,7 @@ public sealed class InvoiceService
 
         await _invoices.AddAsync(creditNote, ct);
         await _invoices.UpdateAsync(original, ct);
+        await DispatchInvoiceEventAsync("invoice.credited", original, ct);
         return Result.Success(ToDto(creditNote));
     }
 

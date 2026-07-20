@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { api, ApiError } from "../api/client";
@@ -10,6 +11,7 @@ import { tokens } from "../theme/tokens";
 /** Inställningar: medlemmar, inbjudningar, plan, påminnelser och fakturaprofil. */
 export function Settings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const canManage = user?.role === "Owner" || user?.role === "Admin";
   const isOwner = user?.role === "Owner";
@@ -148,6 +150,16 @@ export function Settings() {
       {canManage && <ReminderSettingsCard />}
 
       {canManage && <ProfileCard />}
+
+      {canManage && (
+        <Card>
+          <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Bokföring</h2>
+          <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.sm}` }}>
+            Exportera ett räkenskapsårs fakturor som SIE4-fil för import i extern bokföring.
+          </p>
+          <Button onClick={() => navigate("/export")}>Gå till export</Button>
+        </Card>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Faktura.Api.Auth;
+using Faktura.Api.Features.Accounting;
 using Faktura.Api.Features.Articles;
 using Faktura.Api.Features.Auth;
 using Faktura.Api.Features.Billing;
@@ -178,6 +179,7 @@ app.MapArticleEndpoints();
 app.MapRecurringEndpoints();
 app.MapAuditEndpoints();
 app.MapProfileEndpoints();
+app.MapSieExportEndpoints();
 
 // Create indexes at startup (skipped under Testing / when SkipDbInit is set — tests use in-memory fakes).
 if (!app.Environment.IsEnvironment("Testing") && !app.Configuration.GetValue<bool>("SkipDbInit"))

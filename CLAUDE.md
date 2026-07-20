@@ -87,10 +87,17 @@ säljare från fakturaprofilen, köpare från kundens ögonblicksbild, rader/mom
 spårbart identiska med `InvoiceCalculator`. `GET /invoices/{id}/peppol` (auktoriserad,
 409 för utkast) + "Peppol-XML"-knapp i detaljvyn.
 
-**Roadmap (användaren valde alla)**: 015 SIE4-export → 016 publikt API + webhooks →
-017 SignalR → 018 Redis rate limiting → 019 server-side sök/paginering.
+**Levererat: 015 — SIE4-export**: `SieExporter` (ren domänklass) bokför ett räkenskapsårs
+skickade fakturor/kreditfakturor mot en inbyggd BAS-liknande kontoplan (1510 kundfordringar,
+3001–3004 försäljning per momssats, 2611/2621/2631 utgående moms) — varje verifikation
+balanserar exakt, radbelopp grupperas direkt från fakturans rader så krediteringars negerade
+belopp ger automatisk motbokning. `GET /api/export/sie?year=` (Owner/Admin, ISO-8859-1 `.se`-fil)
++ Export-sida (årsväljare) länkad från Inställningar.
 
-Testläge: 206 backend (106 domän + 100 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 016 publikt API + webhooks → 017 SignalR →
+018 Redis rate limiting → 019 server-side sök/paginering.
+
+Testläge: 218 backend (112 domän + 103 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
 GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,

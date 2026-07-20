@@ -114,6 +114,37 @@ export interface PaymentDto {
   createdAt: string;
 }
 
+export interface ShareLinkDto {
+  url: string;
+  token: string;
+}
+
+export interface PublicSellerDto {
+  name: string;
+  orgNumber?: string | null;
+  addressLine?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  bankgiro?: string | null;
+  plusgiro?: string | null;
+  fSkatt: boolean;
+}
+
+export interface PublicInvoiceDto {
+  type: string;
+  status: string;
+  number?: number | null;
+  customerName: string;
+  invoiceDate?: string | null;
+  dueDate?: string | null;
+  ocrNumber?: string | null;
+  lines: InvoiceLineDto[];
+  totals: InvoiceTotalsDto;
+  paidAmount: number;
+  remainingAmount: number;
+  seller: PublicSellerDto;
+}
+
 export interface ReminderSettingsDto {
   autoEnabled: boolean;
   daysAfterDue: number;

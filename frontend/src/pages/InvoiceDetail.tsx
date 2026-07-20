@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, openAuthed } from "../api/client";
-import type { CustomerDto, InvoiceDto, PaymentDto } from "../api/types";
+import type { CustomerDto, InvoiceDto, PaymentDto, ShareLinkDto } from "../api/types";
 import { Nav } from "../components/Nav";
 import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
@@ -82,6 +82,7 @@ export function InvoiceDetail() {
                     PDF
                   </Button>
                 )}
+                {inv.type === "Invoice" && inv.number != null && <ShareButton invoiceId={inv.id} />}
               </div>
             </div>
 
@@ -134,6 +135,29 @@ export function InvoiceDetail() {
         </>
       )}
     </div>
+  );
+}
+
+/** Kundlänk (spec 013): hämtar/skapar portallänken och kopierar den till urklipp. */
+function ShareButton({ invoiceId }: { invoiceId: string }) {
+  const [copied, setCopied] = useState(false);
+  const share = useMutation({
+    mutationFn: () => api.post<ShareLinkDto>(`/api/invoices/${invoiceId}/share`),
+    onSuccess: async (link) => {
+      try {
+        await navigator.clipboard.writeText(link.url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch {
+        window.prompt("Kundlänk (kopiera manuellt):", link.url);
+      }
+    },
+  });
+
+  return (
+    <Button onClick={() => share.mutate()} disabled={share.isPending} style={{ background: tokens.color.surfaceAlt, borderColor: tokens.color.surfaceAlt }}>
+      {copied ? "Länk kopierad!" : "Kundlänk"}
+    </Button>
   );
 }
 

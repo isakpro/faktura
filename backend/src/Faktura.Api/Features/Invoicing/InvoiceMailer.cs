@@ -23,11 +23,13 @@ public sealed class InvoiceMailer
     private readonly IClock _clock;
     private readonly ILogger<InvoiceMailer> _logger;
     private readonly SmtpOptions _smtp;
+    private readonly PortalLinks _portal;
 
     public InvoiceMailer(IOrganizationRepository organizations, IInvoiceEmailRepository log,
         IInvoicePdfGenerator pdf, IEmailSender sender, IIdGenerator ids, IClock clock,
-        ILogger<InvoiceMailer> logger, IOptions<SmtpOptions> smtp)
+        ILogger<InvoiceMailer> logger, IOptions<SmtpOptions> smtp, PortalLinks portal)
     {
+        _portal = portal;
         _organizations = organizations;
         _log = log;
         _pdf = pdf;
@@ -45,9 +47,12 @@ public sealed class InvoiceMailer
         var sellerName = org?.Name ?? "";
         var docName = invoice.Type == InvoiceType.CreditNote ? "Kreditfaktura" : "Faktura";
         var subject = $"{docName} {invoice.Number} från {sellerName}";
+        var portalUrl = await _portal.EnsureAsync(invoice, ct); // null för kreditfakturor/utan BaseUrl
         var body =
             $"Hej,\n\nHär kommer {docName.ToLowerInvariant()} {invoice.Number} från {sellerName}. " +
-            $"Belopp: {invoice.Totals.Gross} kr. Dokumentet finns som PDF-bilaga.\n\nVänliga hälsningar,\n{sellerName}";
+            $"Belopp: {invoice.Totals.Gross} kr. Dokumentet finns som PDF-bilaga." +
+            (portalUrl is null ? "" : $"\nVisa fakturan online: {portalUrl}") +
+            $"\n\nVänliga hälsningar,\n{sellerName}";
 
         var message = new EmailMessage(
             FromAddress: _smtp.FromAddress,

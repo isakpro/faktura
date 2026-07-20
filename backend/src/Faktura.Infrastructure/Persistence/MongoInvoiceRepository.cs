@@ -1,6 +1,7 @@
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Invoicing;
 using Faktura.Infrastructure.Persistence.Documents;
+using MongoDB.Driver;
 
 namespace Faktura.Infrastructure.Persistence;
 
@@ -19,4 +20,12 @@ internal sealed class MongoInvoiceRepository : TenantScopedRepository<InvoiceDoc
 
     public Task UpdateAsync(Invoice invoice, CancellationToken ct = default)
         => ReplaceAsync(invoice.TenantId, invoice.Id, InvoiceDocument.FromDomain(invoice), ct);
+
+    public async Task<Invoice?> GetByShareTokenAsync(string shareToken, CancellationToken ct = default)
+    {
+        // Systemkontext (spec 013): medvetet utanför tenant-filtret — 128-bit-token är kapabiliteten.
+        var filter = Builders<InvoiceDocument>.Filter.Eq(d => d.ShareToken, shareToken);
+        var doc = await Collection.Find(filter).FirstOrDefaultAsync(ct);
+        return doc?.ToDomain();
+    }
 }

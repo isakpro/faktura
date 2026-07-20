@@ -33,6 +33,9 @@ public sealed class Invoice
     /// <summary>OCR-referens (spec 012), sätts vid skick. Null för utkast/äldre fakturor.</summary>
     public string? OcrNumber { get; private set; }
 
+    /// <summary>Kapabilitets-token för kundportalen (spec 013). Tilldelas första gången länken begärs.</summary>
+    public string? ShareToken { get; private set; }
+
     /// <summary>Summa registrerade betalningar (spec 012).</summary>
     public decimal PaidAmount { get; private set; }
 
@@ -48,11 +51,12 @@ public sealed class Invoice
         InvoiceType type, InvoiceStatus status, long? number, DateOnly? invoiceDate, DateOnly? dueDate,
         DateOnly? paidDate, string? originalInvoiceId, decimal creditedAmount, IEnumerable<InvoiceLine> lines,
         DateTime createdAt, DateTime updatedAt, string? recurringSourceId = null,
-        string? ocrNumber = null, decimal paidAmount = 0m)
+        string? ocrNumber = null, decimal paidAmount = 0m, string? shareToken = null)
     {
         RecurringSourceId = recurringSourceId;
         OcrNumber = ocrNumber;
         PaidAmount = paidAmount;
+        ShareToken = shareToken;
         Id = id;
         TenantId = tenantId;
         CustomerId = customerId;
@@ -138,6 +142,20 @@ public sealed class Invoice
 
     /// <summary>Betalar hela kvarvarande saldot i ett svep (snabbknappen "Betald").</summary>
     public Result MarkPaid(DateOnly paidDate, DateTime now) => RegisterPayment(RemainingAmount, paidDate, now);
+
+    /// <summary>
+    /// Tilldelar portal-token (spec 013). Endast fakturor med nummer kan delas; en redan
+    /// tilldelad token behålls (länken ska vara stabil).
+    /// </summary>
+    public Result AssignShareToken(string token, DateTime now)
+    {
+        if (Type != InvoiceType.Invoice || Number is null) return Result.Failure(Error.InvalidState());
+        if (ShareToken is not null) return Result.Success(); // idempotent
+
+        ShareToken = token;
+        UpdatedAt = now;
+        return Result.Success();
+    }
 
     /// <summary>Belopp som återstår att kreditera (brutto minus redan krediterat).</summary>
     public decimal RemainingCreditable => Totals.Gross.Amount - CreditedAmount;

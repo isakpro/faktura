@@ -75,11 +75,16 @@ Luhn + längdsiffra) sätts vid skick → DTO/PDF; `invoicePayments`-reskontra
 "Betald"-knappen betalar saldot via reskontran); delkreditering via radval i
 `POST /invoices/{id}/credit` (validering före nummerförbrukning).
 
-**Roadmap (användaren valde alla)**: 013 kundportal (publik fakturalänk) → 014 Peppol UBL →
-015 SIE4-export → 016 publikt API + webhooks → 017 SignalR → 018 Redis rate limiting →
-019 server-side sök/paginering.
+**Levererat: 013 — Kundportal**: publik fakturavy `/f/{token}` (kapabilitets-token, 128-bit hex
+i klartext på dokumentet — medvetet beslut, dokumenterat i specen), `POST /invoices/{id}/share`
+(idempotent, `PortalLinks`-hjälpare delad med mailers som numera länkar portalen i mejlen),
+publika endpoints `GET /api/public/invoices/{token}(/pdf)` utan auth (IP-rate-limit-partition
+för `/api/public`), "papperslik" portalsida + Kundlänk-knapp (urklipp) i detaljvyn.
 
-Testläge: 190 backend (100 domän + 90 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 014 Peppol UBL → 015 SIE4-export → 016 publikt API +
+webhooks → 017 SignalR → 018 Redis rate limiting → 019 server-side sök/paginering.
+
+Testläge: 198 backend (101 domän + 97 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
 GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,

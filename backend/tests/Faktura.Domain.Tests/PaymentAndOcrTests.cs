@@ -173,6 +173,22 @@ public class PartialCreditTests
     }
 
     [Fact]
+    public void Share_token_only_for_numbered_invoices_and_is_stable()
+    {
+        var draft = Invoice.CreateDraft("i-3", "t-1", "c-1", [new InvoiceLine("X", 1, 100m, VatRate.Zero)], Now);
+        Assert.Equal("invalid_state", draft.AssignShareToken("abc", Now).Error.Code);
+
+        draft.Send(1, Today, new CustomerSnapshot("Kund AB", null, null, null, null), 30, Now);
+        Assert.True(draft.AssignShareToken("first", Now).IsSuccess);
+        Assert.True(draft.AssignShareToken("second", Now).IsSuccess); // idempotent
+        Assert.Equal("first", draft.ShareToken);
+
+        var token1 = ShareTokens.New();
+        Assert.Equal(32, token1.Length);
+        Assert.NotEqual(token1, ShareTokens.New());
+    }
+
+    [Fact]
     public void Dashboard_outstanding_uses_remaining_after_partial_payment()
     {
         var inv = Invoice.CreateDraft("i-1", "t-1", "c-1", [new InvoiceLine("Konsult", 1, 1000m, VatRate.TwentyFive)], Now);

@@ -16,6 +16,7 @@ import { Settings } from "./pages/Settings";
 import { PublicInvoice } from "./pages/PublicInvoice";
 import { Export } from "./pages/Export";
 import { Developer } from "./pages/Developer";
+import { useActivitySocket } from "./realtime/useActivitySocket";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -27,6 +28,7 @@ function Protected({ children }: { children: ReactNode }) {
 
 export default function App() {
   const { status } = useAuth();
+  useActivitySocket(status === "authed");
   return (
     <Routes>
       <Route path="/login" element={status === "authed" ? <Navigate to="/" replace /> : <Login />} />

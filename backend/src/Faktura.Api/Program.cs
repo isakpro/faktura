@@ -95,8 +95,21 @@ builder.Services
             RoleClaimType = FakturaClaims.Role,
             ClockSkew = TimeSpan.FromSeconds(30)
         };
+        // SignalR-webbläsarklienter kan inte sätta Authorization-headern på en WebSocket-
+        // uppkoppling; token skickas därför som query-parameter enbart mot hub-vägen (spec 017).
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/hubs") &&
+                    context.Request.Query.TryGetValue("access_token", out var token))
+                    context.Token = token;
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddSignalR();
 
 // Rate limiting per tenant: partition by tenantId, quota from the tenant's plan config.
 // Anonymous requests are not tenant-limited here (login abuse is handled by the login throttle).
@@ -159,6 +172,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseMiddleware<Faktura.Api.Auth.AuditMiddleware>();
+app.MapHub<Faktura.Api.Realtime.ActivityHub>("/hubs/activity");
 
 // API-dokumentation: OpenAPI-json via Swashbuckle, interaktiv referens via Scalar (/scalar).
 app.UseSwagger();

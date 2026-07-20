@@ -1,14 +1,17 @@
 using System.Security.Claims;
+using Faktura.Api.Realtime;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Auditing;
 using Faktura.Infrastructure.Security;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Faktura.Api.Auth;
 
 /// <summary>
 /// Aktivitetslogg (spec 008): loggar varje autentiserat muterande API-anrop (POST/PUT/DELETE)
 /// med aktör, åtgärd och status. Middleware-ansatsen gör loggningen enhetlig — ingen enskild
-/// tjänst kan glömma den. Fel i loggningen får aldrig påverka svaret (FR-003).
+/// tjänst kan glömma den. Fel i loggningen får aldrig påverka svaret (FR-003). Sänder samma
+/// post live till tenantens SignalR-grupp (spec 017) så andra inloggade ser den direkt.
 /// </summary>
 public sealed class AuditMiddleware
 {
@@ -41,14 +44,25 @@ public sealed class AuditMiddleware
             var ids = context.RequestServices.GetRequiredService<IIdGenerator>();
             var clock = context.RequestServices.GetRequiredService<IClock>();
 
-            await repo.AddAsync(new AuditEntry(
+            var entry = new AuditEntry(
                 ids.NewId(),
                 tenantId,
                 context.User.FindFirstValue("email") ?? "",
                 context.Request.Method,
                 path,
                 context.Response.StatusCode,
-                clock.UtcNow));
+                clock.UtcNow);
+            await repo.AddAsync(entry);
+
+            var hub = context.RequestServices.GetRequiredService<IHubContext<ActivityHub>>();
+            await hub.Clients.Group(ActivityHub.GroupName(tenantId)).SendAsync("activity", new
+            {
+                actorEmail = entry.ActorEmail,
+                method = entry.Method,
+                path = entry.Path,
+                statusCode = entry.StatusCode,
+                occurredAt = entry.OccurredAt
+            });
         }
         catch (Exception ex)
         {

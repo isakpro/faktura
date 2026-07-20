@@ -14,6 +14,7 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
 import { PublicInvoice } from "./pages/PublicInvoice";
+import { Export } from "./pages/Export";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/recurring" element={<Protected><Recurring /></Protected>} />
       <Route path="/invoices/:id" element={<Protected><InvoiceDetail /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
+      <Route path="/export" element={<Protected><Export /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

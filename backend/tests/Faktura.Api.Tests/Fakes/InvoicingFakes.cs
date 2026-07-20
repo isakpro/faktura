@@ -49,6 +49,9 @@ public sealed class InMemoryInvoiceRepository : IInvoiceRepository
         _items[invoice.Id] = invoice;
         return Task.CompletedTask;
     }
+
+    public Task<Invoice?> GetByShareTokenAsync(string shareToken, CancellationToken ct = default)
+        => Task.FromResult(_items.Values.FirstOrDefault(i => i.ShareToken == shareToken));
 }
 
 public sealed class InMemoryInvoicePaymentRepository : IInvoicePaymentRepository

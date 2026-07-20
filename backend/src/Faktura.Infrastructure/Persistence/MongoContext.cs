@@ -90,7 +90,16 @@ public sealed class MongoContext
                 new CreateIndexOptions { Name = "ix_invoice_tenant_status" }),
             new CreateIndexModel<InvoiceDocument>(
                 Builders<InvoiceDocument>.IndexKeys.Ascending(i => i.TenantId).Ascending(i => i.Number),
-                new CreateIndexOptions { Name = "ux_invoice_tenant_number", Unique = true, Sparse = true })
+                new CreateIndexOptions { Name = "ux_invoice_tenant_number", Unique = true, Sparse = true }),
+            // Portal-uppslag (013): globalt unik token; partial så dokument utan token inte indexeras.
+            new CreateIndexModel<InvoiceDocument>(
+                Builders<InvoiceDocument>.IndexKeys.Ascending(i => i.ShareToken),
+                new CreateIndexOptions<InvoiceDocument>
+                {
+                    Name = "ux_invoice_sharetoken",
+                    Unique = true,
+                    PartialFilterExpression = Builders<InvoiceDocument>.Filter.Exists(i => i.ShareToken)
+                })
         }, ct);
 
         await InvoiceEmails.Indexes.CreateOneAsync(

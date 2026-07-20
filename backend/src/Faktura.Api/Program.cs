@@ -38,6 +38,8 @@ builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<InvoiceService>();
+builder.Services.AddScoped<PortalLinks>();
+builder.Services.AddScoped<PublicInvoiceService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ReminderMailer>();
 builder.Services.AddScoped<ReminderService>();
@@ -111,6 +113,16 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             });
         }
+        // Kundportalen (013) är oautentiserad: begränsa per IP så token-svep blir meningslösa.
+        if (context.Request.Path.StartsWithSegments("/api/public"))
+            return RateLimitPartition.GetFixedWindowLimiter($"pub:{context.Connection.RemoteIpAddress}",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 120,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                });
+
         return RateLimitPartition.GetNoLimiter("anon");
     });
     options.OnRejected = async (context, ct) =>

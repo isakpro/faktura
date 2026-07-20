@@ -36,3 +36,22 @@ public sealed record InvoiceDto(
 
 public sealed record InvoiceListItemDto(
     string Id, long? Number, string Status, string CustomerId, decimal Gross, DateOnly? DueDate);
+
+// Kundportalen (spec 013).
+public sealed record ShareLinkDto(string Url, string Token);
+public sealed record PublicSellerDto(
+    string Name, string? OrgNumber, string? AddressLine, string? PostalCode, string? City,
+    string? Bankgiro, string? Plusgiro, bool FSkatt);
+public sealed record PublicInvoiceDto(
+    string Type,
+    string Status,
+    long? Number,
+    string CustomerName,
+    DateOnly? InvoiceDate,
+    DateOnly? DueDate,
+    string? OcrNumber,
+    IReadOnlyList<InvoiceLineDto> Lines,
+    InvoiceTotalsDto Totals,
+    decimal PaidAmount,
+    decimal RemainingAmount,
+    PublicSellerDto Seller);

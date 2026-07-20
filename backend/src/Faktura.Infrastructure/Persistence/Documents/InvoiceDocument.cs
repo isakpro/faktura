@@ -83,6 +83,9 @@ internal sealed class InvoiceDocument : ITenantDocument
     [BsonIgnoreIfNull] public string? OcrNumber { get; set; }
     [BsonRepresentation(BsonType.Decimal128)] public decimal PaidAmount { get; set; }
 
+    // Spec 013 — portal-token, tilldelas första gången kundlänken begärs.
+    [BsonIgnoreIfNull] public string? ShareToken { get; set; }
+
     public List<InvoiceLineDocument> Lines { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -107,6 +110,7 @@ internal sealed class InvoiceDocument : ITenantDocument
         CreditedAmount = i.CreditedAmount,
         OcrNumber = i.OcrNumber,
         PaidAmount = i.PaidAmount,
+        ShareToken = i.ShareToken,
         Lines = i.Lines.Select(InvoiceLineDocument.FromDomain).ToList(),
         CreatedAt = i.CreatedAt,
         UpdatedAt = i.UpdatedAt
@@ -115,5 +119,5 @@ internal sealed class InvoiceDocument : ITenantDocument
     public Invoice ToDomain() => new(
         Id, TenantId, CustomerId, CustomerSnapshot?.ToDomain(), Type, Status, Number,
         ToDate(InvoiceDate), ToDate(DueDate), ToDate(PaidDate), OriginalInvoiceId, CreditedAmount,
-        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt, RecurringSourceId, OcrNumber, PaidAmount);
+        Lines.Select(l => l.ToDomain()), CreatedAt, UpdatedAt, RecurringSourceId, OcrNumber, PaidAmount, ShareToken);
 }

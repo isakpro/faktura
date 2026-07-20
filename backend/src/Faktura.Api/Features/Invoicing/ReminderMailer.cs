@@ -23,11 +23,13 @@ public sealed class ReminderMailer
     private readonly IClock _clock;
     private readonly ILogger<ReminderMailer> _logger;
     private readonly SmtpOptions _smtp;
+    private readonly PortalLinks _portal;
 
     public ReminderMailer(IOrganizationRepository organizations, IInvoiceReminderRepository reminders,
         IInvoicePdfGenerator pdf, IEmailSender sender, IIdGenerator ids, IClock clock,
-        ILogger<ReminderMailer> logger, IOptions<SmtpOptions> smtp)
+        ILogger<ReminderMailer> logger, IOptions<SmtpOptions> smtp, PortalLinks portal)
     {
+        _portal = portal;
         _organizations = organizations;
         _reminders = reminders;
         _pdf = pdf;
@@ -49,11 +51,13 @@ public sealed class ReminderMailer
         var sequence = history.Count(r => r.Status == ReminderStatus.Sent) + 1;
 
         var subject = $"Påminnelse {sequence}: Faktura {invoice.Number} från {sellerName}";
+        var portalUrl = await _portal.EnsureAsync(invoice, ct);
         var body =
             $"Hej,\n\nDetta är påminnelse nr {sequence} om faktura {invoice.Number} från {sellerName}, " +
-            $"som förföll {invoice.DueDate:yyyy-MM-dd}. Belopp att betala: {invoice.Totals.Gross} kr.\n" +
-            $"Fakturan bifogas som PDF. Har du redan betalat kan du bortse från denna påminnelse.\n\n" +
-            $"Vänliga hälsningar,\n{sellerName}";
+            $"som förföll {invoice.DueDate:yyyy-MM-dd}. Belopp att betala: {invoice.RemainingAmount} kr.\n" +
+            $"Fakturan bifogas som PDF. Har du redan betalat kan du bortse från denna påminnelse.\n" +
+            (portalUrl is null ? "" : $"Visa fakturan online: {portalUrl}\n") +
+            $"\nVänliga hälsningar,\n{sellerName}";
 
         var message = new EmailMessage(
             FromAddress: _smtp.FromAddress,

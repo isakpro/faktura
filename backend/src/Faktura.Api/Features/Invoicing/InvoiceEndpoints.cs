@@ -64,6 +64,13 @@ public static class InvoiceEndpoints
             return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
         });
 
+        // Kundportalen (spec 013): skapa/återanvänd kundlänk.
+        group.MapPost("/{id}/share", async (string id, InvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.ShareAsync(id, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
         group.MapGet("/{id}/pdf", async (string id, InvoiceService svc, CancellationToken ct) =>
         {
             var result = await svc.GeneratePdfAsync(id, ct);
@@ -98,6 +105,23 @@ public static class InvoiceEndpoints
 
         app.MapGet("/api/dashboard", async (DashboardService svc, CancellationToken ct) =>
             Results.Ok(await svc.GetAsync(ct))).RequireAuthorization();
+
+        // Kundportalen (spec 013): publika endpoints — token är behörigheten, ingen auth.
+        var pub = app.MapGroup("/api/public/invoices");
+
+        pub.MapGet("/{token}", async (string token, PublicInvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.GetAsync(token, ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : AuthEndpoints.ToProblem(result.Error);
+        });
+
+        pub.MapGet("/{token}/pdf", async (string token, PublicInvoiceService svc, CancellationToken ct) =>
+        {
+            var result = await svc.PdfAsync(token, ct);
+            return result.IsSuccess
+                ? Results.File(result.Value.Bytes, "application/pdf", result.Value.FileName)
+                : AuthEndpoints.ToProblem(result.Error);
+        });
 
         var settings = app.MapGroup("/api/reminder-settings").RequireAuthorization();
 

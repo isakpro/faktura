@@ -13,6 +13,7 @@ import { InvoiceDetail } from "./pages/InvoiceDetail";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
+import { PublicInvoice } from "./pages/PublicInvoice";
 import { tokens } from "./theme/tokens";
 
 function Protected({ children }: { children: ReactNode }) {
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/accept/:token" element={<AcceptInvite />} />
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/reset/:token" element={<ResetPassword />} />
+      <Route path="/f/:token" element={<PublicInvoice />} />
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/customers" element={<Protected><Customers /></Protected>} />
       <Route path="/articles" element={<Protected><Articles /></Protected>} />

@@ -15,13 +15,15 @@ public sealed class InvoiceService
     private readonly IInvoicePdfGenerator _pdf;
     private readonly IOrganizationRepository _organizations;
     private readonly IInvoicePaymentRepository _payments;
+    private readonly PortalLinks _portal;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
 
     public InvoiceService(ITenantContext tenant, IInvoiceRepository invoices, ICustomerRepository customers,
         IInvoiceNumberSequence numbers, IInvoicePdfGenerator pdf, IOrganizationRepository organizations,
-        IInvoicePaymentRepository payments, IIdGenerator ids, IClock clock)
+        IInvoicePaymentRepository payments, PortalLinks portal, IIdGenerator ids, IClock clock)
     {
+        _portal = portal;
         _tenant = tenant;
         _invoices = invoices;
         _customers = customers;
@@ -156,6 +158,18 @@ public sealed class InvoiceService
         await _invoices.AddAsync(creditNote, ct);
         await _invoices.UpdateAsync(original, ct);
         return Result.Success(ToDto(creditNote));
+    }
+
+    /// <summary>Kundlänk (spec 013): tilldelar portal-token vid behov och returnerar den stabila länken.</summary>
+    public async Task<Result<ShareLinkDto>> ShareAsync(string id, CancellationToken ct)
+    {
+        var invoice = await _invoices.GetByIdAsync(_tenant.TenantId, id, ct);
+        if (invoice is null) return Result.Failure<ShareLinkDto>(Error.NotFound());
+
+        var url = await _portal.EnsureAsync(invoice, ct);
+        return url is null
+            ? Result.Failure<ShareLinkDto>(Error.InvalidState())
+            : Result.Success(new ShareLinkDto(url, invoice.ShareToken!));
     }
 
     private async Task<Result<InvoiceDto>> WithInvoiceAsync(

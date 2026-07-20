@@ -102,10 +102,18 @@ scope-gated. Utgående webhooks (`invoice.sent`/`.paid`/`.credited`, HMAC-SHA256
 en retry, leveranslogg) via `IWebhookDispatcher` injicerad i InvoiceService. Hantering av nycklar
 + mottagare (Owner/Admin) på ny Utvecklare-sida länkad från Inställningar.
 
-**Roadmap (användaren valde alla)**: 017 SignalR → 018 Redis rate limiting →
-019 server-side sök/paginering.
+**Levererat: 017 — Realtidsuppdateringar (SignalR)**: `ActivityHub` på `/hubs/activity`
+(JWT via query-string för WebSocket, grupp per tenant härledd ur claims). `AuditMiddleware`
+(spec 008) sänder samma post den redan loggar till tenantens grupp — ingen tjänst behöver
+känna till realtid explicit. Frontend kopplar upp automatiskt vid inloggning
+(`useActivitySocket`) och invaliderar `["audit"]`/`["dashboard"]` vid mottagen händelse.
+CORS-fälla: SignalR skickar `credentials: include` som default → `withCredentials: false`
+på klienten (vi autentiserar med bearer-token, inga cookies).
 
-Testläge: 231 backend (117 domän + 114 API inkl. Testcontainers) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 018 Redis rate limiting → 019 server-side sök/paginering.
+
+Testläge: 234 backend (117 domän + 117 API inkl. Testcontainers + riktig SignalR-klient mot
+TestServer) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
 GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,

@@ -13,6 +13,7 @@ using Faktura.Api.Features.Members;
 using Faktura.Api.Features.PublicApi;
 using Faktura.Api.Features.Webhooks;
 using Faktura.Api.Health;
+using Faktura.Api.RateLimiting;
 using Faktura.Domain.Abstractions;
 using Faktura.Domain.Organizations;
 using Faktura.Infrastructure;
@@ -116,8 +117,11 @@ builder.Services.AddSignalR();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    // Räknaren är Redis-baserad i produktion (spec 018) — kvoten delas mellan instanser
+    // i stället för att nollställas per process, som den inbyggda in-memory-begränsaren gjorde.
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
+        var counter = context.RequestServices.GetRequiredService<IRateLimitCounter>();
         var user = context.User;
         if (user.Identity?.IsAuthenticated == true)
         {
@@ -125,22 +129,14 @@ builder.Services.AddRateLimiter(options =>
             var catalog = context.RequestServices.GetRequiredService<IPlanCatalog>();
             var plan = Enum.TryParse<PlanTier>(user.FindFirstValue(FakturaClaims.Plan), out var p) ? p : PlanTier.Free;
             var def = catalog.Get(plan);
-            return RateLimitPartition.GetFixedWindowLimiter($"tenant:{tenantId}", _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = def.RateLimitPermitLimit,
-                Window = TimeSpan.FromSeconds(def.RateLimitWindowSeconds),
-                QueueLimit = 0
-            });
+            var window = TimeSpan.FromSeconds(def.RateLimitWindowSeconds);
+            return RateLimitPartition.Get($"tenant:{tenantId}",
+                key => new CounterFixedWindowRateLimiter(counter, $"ratelimit:{key}", def.RateLimitPermitLimit, window));
         }
         // Kundportalen (013) är oautentiserad: begränsa per IP så token-svep blir meningslösa.
         if (context.Request.Path.StartsWithSegments("/api/public"))
-            return RateLimitPartition.GetFixedWindowLimiter($"pub:{context.Connection.RemoteIpAddress}",
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 120,
-                    Window = TimeSpan.FromMinutes(1),
-                    QueueLimit = 0
-                });
+            return RateLimitPartition.Get($"pub:{context.Connection.RemoteIpAddress}",
+                key => new CounterFixedWindowRateLimiter(counter, $"ratelimit:{key}", 120, TimeSpan.FromMinutes(1)));
 
         return RateLimitPartition.GetNoLimiter("anon");
     });

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, openAuthed } from "../api/client";
 import type { ArticleDto, CustomerDto, InvoiceDto, InvoiceLineInput, InvoiceListItemDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -97,10 +97,9 @@ export function Invoices() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: tokens.space.md }}>
-      <Nav />
-
-      <Card style={{ marginBottom: tokens.space.lg }}>
+    <Layout>
+      <div className="split-grid">
+      <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Nytt fakturautkast</h2>
         <form onSubmit={onCreate}>
           <Field label="Kund">
@@ -111,7 +110,7 @@ export function Invoices() {
           </Field>
 
           {lines.map((line, i) => (
-            <div key={i} style={{ display: "flex", gap: tokens.space.sm, marginBottom: tokens.space.sm, alignItems: "center" }}>
+            <div key={i} style={{ display: "flex", gap: tokens.space.sm, marginBottom: tokens.space.sm, alignItems: "center", flexWrap: "wrap" }}>
               {(articles.data?.length ?? 0) > 0 && (
                 <select value="" onChange={(e) => applyArticle(i, e.target.value)} style={{ ...selectStyle, width: 130 }}>
                   <option value="">Artikel…</option>
@@ -120,10 +119,10 @@ export function Invoices() {
                   ))}
                 </select>
               )}
-              <Input placeholder="Beskrivning" value={line.description} onChange={(e) => updateLine(i, { description: e.target.value })} style={{ flex: 3 }} />
-              <Input type="number" placeholder="Antal" value={line.quantity} onChange={(e) => updateLine(i, { quantity: Number(e.target.value) })} style={{ flex: 1 }} />
+              <Input placeholder="Beskrivning" value={line.description} onChange={(e) => updateLine(i, { description: e.target.value })} style={{ flex: 3, minWidth: 170 }} />
+              <Input type="number" placeholder="Antal" value={line.quantity} onChange={(e) => updateLine(i, { quantity: Number(e.target.value) })} style={{ flex: 1, minWidth: 70 }} />
               <Input placeholder="Enhet" value={line.unit ?? ""} onChange={(e) => updateLine(i, { unit: e.target.value || null })} style={{ width: 70 }} />
-              <Input type="number" placeholder="À-pris" value={line.unitPriceExclVat} onChange={(e) => updateLine(i, { unitPriceExclVat: Number(e.target.value) })} style={{ flex: 1 }} />
+              <Input type="number" placeholder="À-pris" value={line.unitPriceExclVat} onChange={(e) => updateLine(i, { unitPriceExclVat: Number(e.target.value) })} style={{ flex: 1, minWidth: 90 }} />
               <select value={line.vatRate} onChange={(e) => updateLine(i, { vatRate: Number(e.target.value) })} style={selectStyle}>
                 {VAT_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
               </select>
@@ -189,6 +188,7 @@ export function Invoices() {
           </tbody>
         </table>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

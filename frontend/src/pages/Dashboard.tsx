@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../api/client";
 import type { DashboardDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { RevenueChart } from "../components/RevenueChart";
 import { ActivityCard } from "../components/ActivityCard";
 import { Badge, Card } from "../components/ui";
@@ -13,15 +13,15 @@ const kr = (n: number) => `${n.toLocaleString("sv-SE")} kr`;
 
 function StatTile({ label, value, emphasize }: { label: string; value: number; emphasize?: boolean }) {
   return (
-    <Card style={{ flex: 1, minWidth: 180, padding: tokens.space.md }}>
+    <Card style={{ padding: tokens.space.lg }}>
       <div style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, textTransform: "uppercase", letterSpacing: "0.08em" }}>
         {label}
       </div>
       <div
         style={{
-          fontSize: tokens.font.size.xl,
+          fontSize: "34px",
           fontWeight: 700,
-          fontVariantNumeric: "tabular-nums",
+          marginTop: tokens.space.xs,
           whiteSpace: "nowrap",
           color: emphasize && value > 0 ? tokens.color.accent : tokens.color.text,
         }}
@@ -34,52 +34,52 @@ function StatTile({ label, value, emphasize }: { label: string; value: number; e
 
 /** Översikten: nyckeltal, omsättning, senaste fakturor och aktivitet. Administration bor under Inställningar. */
 export function Dashboard() {
-  const { user, organization } = useAuth();
+  const { user } = useAuth();
   const canManage = user?.role === "Owner" || user?.role === "Admin";
   const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: () => api.get<DashboardDto>("/api/dashboard") });
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
-      <Nav />
-      <span style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.md}` }}>
-        {user?.email} · {user?.role} · Plan: {organization?.plan}
-      </span>
-
+    <Layout>
       {dashboard.data && (
         <>
-          <div style={{ display: "flex", gap: tokens.space.md, flexWrap: "wrap" }}>
+          <div className="kpi-grid">
             <StatTile label="Utestående" value={dashboard.data.outstanding} />
             <StatTile label="Förfallet" value={dashboard.data.overdue} emphasize />
             <StatTile label="Betalt i år" value={dashboard.data.paidThisYear} />
           </div>
 
-          <Card>
-            <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Omsättning per månad</h2>
-            <RevenueChart data={dashboard.data.monthlyRevenue} />
-          </Card>
+          <div className="dash-grid">
+            <Card>
+              <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Omsättning per månad</h2>
+              <RevenueChart data={dashboard.data.monthlyRevenue} />
+            </Card>
 
-          {dashboard.data.recentInvoices.length > 0 && (
             <Card>
               <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Senaste fakturor</h2>
+              {dashboard.data.recentInvoices.length === 0 && (
+                <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm }}>
+                  Inga fakturor ännu — skapa den första under <Link to="/invoices" style={{ color: tokens.color.text, fontWeight: 600 }}>Fakturor</Link>.
+                </p>
+              )}
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {dashboard.data.recentInvoices.map((inv) => (
-                  <li key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: tokens.space.sm, borderTop: tokens.line.perforated }}>
-                    <Link to={`/invoices/${inv.id}`} style={{ color: tokens.color.text, fontWeight: 600 }}>
+                  <li key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: tokens.space.sm, padding: tokens.space.sm, borderTop: tokens.line.perforated }}>
+                    <Link to={`/invoices/${inv.id}`} style={{ color: tokens.color.text, fontWeight: 600, whiteSpace: "nowrap" }}>
                       Faktura {inv.number ?? "(utkast)"}
                     </Link>
-                    <span style={{ display: "flex", alignItems: "center", gap: tokens.space.md }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: tokens.space.sm }}>
                       <Badge status={inv.status} />
-                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{kr(inv.gross)}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{kr(inv.gross)}</span>
                     </span>
                   </li>
                 ))}
               </ul>
             </Card>
-          )}
+          </div>
         </>
       )}
 
       {canManage && <ActivityCard />}
-    </div>
+    </Layout>
   );
 }

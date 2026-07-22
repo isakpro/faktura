@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { openAuthed } from "../api/client";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Button, Card, Field } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -22,8 +22,7 @@ export function Export() {
   }
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
-      <Nav />
+    <Layout narrow>
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Bokföringsexport (SIE4)</h2>
         <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.sm}` }}>
@@ -47,6 +46,6 @@ export function Export() {
           <Button onClick={download} disabled={busy}>Ladda ner .se-fil</Button>
         </div>
       </Card>
-    </div>
+    </Layout>
   );
 }

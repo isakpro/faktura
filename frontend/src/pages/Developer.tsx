@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, BASE_URL } from "../api/client";
 import type { ApiKeyDto, CreatedApiKeyDto, CreatedWebhookDto, WebhookEndpointDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -11,8 +11,7 @@ const SCOPES = ["invoices:read", "customers:read", "customers:write"];
 /** Publikt API + webhooks (spec 016): nyckelhantering och mottagar-URL:er. */
 export function Developer() {
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
-      <Nav />
+    <Layout>
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Publikt API</h2>
         <p style={{ color: tokens.color.textMuted, fontSize: tokens.font.size.sm, marginTop: `-${tokens.space.sm}` }}>
@@ -20,9 +19,11 @@ export function Developer() {
           t.ex. <code>GET /api/v1/invoices</code> eller <code>GET /api/v1/customers</code>.
         </p>
       </Card>
-      <ApiKeysCard />
-      <WebhooksCard />
-    </div>
+      <div className="card-grid">
+        <ApiKeysCard />
+        <WebhooksCard />
+      </div>
+    </Layout>
   );
 }
 

@@ -13,12 +13,13 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
   if (data.length === 0) return null;
 
   const width = 660;
-  const height = 150;
+  const height = 180;
   const labelZone = 18;
   const topZone = 16; // plats för maxvärdets etikett
   const plotHeight = height - labelZone - topZone;
-  const barGap = 2;
-  const barWidth = width / data.length - barGap;
+  const band = width / data.length;
+  // Staplar cappas till 24px (dataviz-spec) och centreras i sitt band — bandets rest är luft.
+  const barWidth = Math.min(24, band - 2);
   const max = Math.max(...data.map((m) => m.gross), 1);
   const maxIndex = data.findIndex((m) => m.gross === max && max > 0);
 
@@ -29,7 +30,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
       role="img"
       aria-label={`Omsättning per månad: ${data.map((m) => `${MONTHS[m.month - 1]} ${kr(m.gross)}`).join(", ")}`}
     >
-      {/* Recessiva stödlinjer (50 % och 100 % av max) — ger plotten struktur även med gles data. */}
+      {/* Recessiva stödlinjer (50 % och 100 % av max) — solida hårlinjer, aldrig streckade i plotten. */}
       {[0.5, 1].map((f) => (
         <line
           key={f}
@@ -39,12 +40,11 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
           y2={topZone + plotHeight * (1 - f)}
           stroke={tokens.color.border}
           strokeWidth={1}
-          strokeDasharray="2 4"
         />
       ))}
       {data.map((m, i) => {
         const barHeight = max === 0 ? 0 : (m.gross / max) * plotHeight;
-        const x = i * (barWidth + barGap);
+        const x = i * band + (band - barWidth) / 2;
         const y = topZone + plotHeight - barHeight;
         return (
           <g key={`${m.year}-${m.month}`}>
@@ -58,7 +58,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
               </>
             )}
             {/* Hover-tooltip (native) med större träffyta än stapeln. */}
-            <rect x={x} y={0} width={barWidth + barGap} height={height - labelZone} fill="transparent">
+            <rect x={i * band} y={0} width={band} height={height - labelZone} fill="transparent">
               <title>{`${MONTHS[m.month - 1]} ${m.year} · ${kr(m.gross)}`}</title>
             </rect>
             {i === maxIndex && (

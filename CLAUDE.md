@@ -110,12 +110,21 @@ känna till realtid explicit. Frontend kopplar upp automatiskt vid inloggning
 CORS-fälla: SignalR skickar `credentials: include` som default → `withCredentials: false`
 på klienten (vi autentiserar med bearer-token, inga cookies).
 
-**Roadmap (användaren valde alla)**: 018 Redis rate limiting → 019 server-side sök/paginering.
+**Levererat: 018 — Redis rate limiting**: skulden "in-memory per instans" betald.
+`IRateLimitCounter` (domän) + `RedisRateLimitCounter` (INCR + EXPIRE endast vid count==1) driver
+en egen `CounterFixedWindowRateLimiter : RateLimiter` (egen async-väg — ingen blockerad
+trådpool-tråd per request) i `PartitionedRateLimiter` för både tenant-kvot och portalens
+IP-partition. `RedisLoginThrottle` ersätter `InMemoryLoginThrottle` i prod-DI (räknar-/spärrnyckel
+med TTL; samma `ILoginThrottle`-semantik — AuthService orörd). Compose har `redis:7-alpine`
+(`Redis__ConnectionString`); testsviten kör in-memory-fakes, Testcontainers-klassen
+`RedisRealTests` (SkippableFact) bevisar INCR/EXPIRE-semantiken mot riktig Redis. Verifierat
+mot compose: 429 + `throttle:*`/`ratelimit:tenant:*`-nycklar i redis-cli.
 
-Testläge: 234 backend (117 domän + 117 API inkl. Testcontainers + riktig SignalR-klient mot
-TestServer) + 8 vitest + 1 Playwright-E2E.
+**Roadmap (användaren valde alla)**: 019 server-side sök/paginering.
+
+Testläge: 238 backend (117 domän + 121 API inkl. Testcontainers Mongo+Redis + riktig
+SignalR-klient mot TestServer) + 8 vitest + 1 Playwright-E2E.
 **Release v0.7.0** på `main` (001–010 + infra-chores). Aktiv feature-serie: roadmapen ovan; nästa
 release blir v0.8.0. Kvar: **skarp deploy** (kräver användarens konton: Render/Cloudflare/Atlas +
-GitHub Secrets). Medvetna skulder (dokumenterade): in-memory rate limit/broms per instans,
-refresh-tokens i localStorage.
+GitHub Secrets). Medvetna skulder (dokumenterade): refresh-tokens i localStorage.
 <!-- SPECKIT END -->

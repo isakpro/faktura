@@ -10,6 +10,7 @@ using Faktura.Infrastructure.Security;
 using Faktura.Infrastructure.Webhooks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Faktura.Infrastructure;
 
@@ -25,13 +26,20 @@ public static class DependencyInjection
         services.Configure<StripeOptions>(config.GetSection(StripeOptions.SectionName));
         services.Configure<SmtpOptions>(config.GetSection(SmtpOptions.SectionName));
         services.Configure<AppOptions>(config.GetSection(AppOptions.SectionName));
+        services.Configure<RedisOptions>(config.GetSection(RedisOptions.SectionName));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, ObjectIdGenerator>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IPlanCatalog, PlanCatalog>();
         services.AddSingleton<ITokenService, JwtTokenService>();
-        services.AddSingleton<ILoginThrottle, InMemoryLoginThrottle>();
+
+        // Distribuerad broms/rate limiting (spec 018) — delad mellan instanser via Redis.
+        // Lazy anslutning: kraschar inte vid start om Redis inte är uppe än (t.ex. compose-startordning).
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+            ConnectionMultiplexer.Connect(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RedisOptions>>().Value.ConnectionString));
+        services.AddSingleton<IRateLimitCounter, RedisRateLimitCounter>();
+        services.AddSingleton<ILoginThrottle, RedisLoginThrottle>();
 
         services.AddSingleton<MongoContext>();
         services.AddScoped<IOrganizationRepository, MongoOrganizationRepository>();

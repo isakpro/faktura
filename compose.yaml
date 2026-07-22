@@ -6,6 +6,7 @@
 #   API:              http://localhost:5080   (Scalar-docs: /scalar · hälsa: /health/ready)
 #   Mailpit (mejl):   http://localhost:8025   (fångar alla utskick — fakturor & påminnelser)
 #   MongoDB:          mongodb://localhost:27017
+#   Redis:            localhost:6379            (rate limiting/inloggningsbroms, delat mellan instanser)
 #
 # Endast utvecklings-/demovärden — inga riktiga hemligheter här.
 name: faktura
@@ -29,6 +30,16 @@ services:
       - "8025:8025"   # webbgränssnitt
       - "1025:1025"   # SMTP
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build: ./backend
     ports:
@@ -38,9 +49,12 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       Mongo__ConnectionString: mongodb://mongo:27017
       Mongo__Database: faktura
+      Redis__ConnectionString: redis:6379
       Jwt__SigningKey: compose-dev-signing-key-byt-aldrig-i-produktion-0123456789
       Jwt__Issuer: faktura
       Jwt__Audience: faktura

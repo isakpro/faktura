@@ -98,6 +98,13 @@ public sealed class FakturaApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IRecurringInvoiceRepository>();
             services.AddSingleton<IRecurringInvoiceRepository, InMemoryRecurringInvoiceRepository>();
 
+            // Rate limiting/broms (018): Redis-implementationerna byts mot process-lokala så
+            // testsviten inte kräver en Redis — IConnectionMultiplexer resolvas då aldrig.
+            services.RemoveAll<IRateLimitCounter>();
+            services.AddSingleton<IRateLimitCounter, InMemoryRateLimitCounter>();
+            services.RemoveAll<ILoginThrottle>();
+            services.AddSingleton<ILoginThrottle, Faktura.Infrastructure.Security.InMemoryLoginThrottle>();
+
             // Publikt API + webhooks (016): in-memory nycklar/mottagare + fångad dispatch (ingen riktig HTTP).
             services.RemoveAll<IApiKeyRepository>();
             services.AddSingleton<IApiKeyRepository, InMemoryApiKeyRepository>();

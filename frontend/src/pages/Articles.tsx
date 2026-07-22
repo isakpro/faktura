@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import type { ArticleDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Badge, Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -63,10 +63,9 @@ export function Articles() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: tokens.space.md }}>
-      <Nav />
-
-      <Card style={{ marginBottom: tokens.space.lg }}>
+    <Layout>
+      <div className="split-grid">
+      <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Ny artikel</h2>
         <form onSubmit={onSubmit} style={{ display: "flex", gap: tokens.space.sm, alignItems: "end", flexWrap: "wrap" }}>
           <div style={{ flex: 3, minWidth: 160 }}>
@@ -136,6 +135,7 @@ export function Articles() {
           </tbody>
         </table>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

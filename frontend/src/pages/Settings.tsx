@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { api, ApiError } from "../api/client";
 import type { BillingDto, InvitationDto, MemberDto, ReminderSettingsDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -69,9 +69,8 @@ export function Settings() {
   }
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md, display: "grid", gap: tokens.space.lg }}>
-      <Nav />
-
+    <Layout>
+      <div className="card-grid">
       <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Medlemmar</h2>
         {members.isLoading && <p>Laddar…</p>}
@@ -170,7 +169,8 @@ export function Settings() {
           <Button onClick={() => navigate("/developer")}>Gå till utvecklarsidan</Button>
         </Card>
       )}
-    </div>
+      </div>
+    </Layout>
   );
 }
 

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import type { CustomerDto } from "../api/types";
-import { Nav } from "../components/Nav";
+import { Layout } from "../components/Layout";
 import { Button, Card, ErrorText, Field, Input } from "../components/ui";
 import { tokens } from "../theme/tokens";
 
@@ -32,9 +32,9 @@ export function Customers() {
   }
 
   return (
-    <div style={{ maxWidth: 780, margin: "0 auto", padding: tokens.space.md }}>
-      <Nav />
-      <Card style={{ marginBottom: tokens.space.lg }}>
+    <Layout>
+      <div className="split-grid">
+      <Card>
         <h2 style={{ marginTop: 0, fontSize: tokens.font.size.lg }}>Ny kund</h2>
         <form onSubmit={onSubmit} style={{ display: "flex", gap: tokens.space.sm, alignItems: "end", flexWrap: "wrap" }}>
           <div style={{ flex: 2, minWidth: 180 }}>
@@ -65,6 +65,7 @@ export function Customers() {
           ))}
         </ul>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

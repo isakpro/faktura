@@ -28,7 +28,15 @@ export function Login() {
   }
 
   return (
-    <div style={{ maxWidth: 380, margin: "10vh auto" }}>
+    <div style={{ maxWidth: 380, margin: "10vh auto", padding: tokens.space.md }} className="app-content">
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontFamily: tokens.font.display, fontSize: "44px", fontWeight: 700, lineHeight: 1 }}>
+          Faktura<span style={{ color: tokens.color.accent }}>.</span>
+        </div>
+        <p style={{ color: tokens.color.textMuted, margin: `${tokens.space.sm} 0 0` }}>
+          Din huvudbok, fast utan pappersdamm.
+        </p>
+      </div>
       <Card>
         <h1 style={{ fontSize: tokens.font.size.xl, marginTop: 0 }}>Logga in</h1>
         <form onSubmit={onSubmit}>

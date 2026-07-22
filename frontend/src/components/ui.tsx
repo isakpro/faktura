@@ -1,10 +1,11 @@
 import type { ButtonHTMLAttributes, CSSProperties, InputHTMLAttributes, ReactNode } from "react";
 import { tokens } from "../theme/tokens";
 
-/** Kvittoslip: papper med bläck-rubriklinje överst och mjuk pappersskugga. */
+/** Kvittoslip: papper med bläck-rubriklinje överst och mjuk pappersskugga. Lyfter vid hover (.card). */
 export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div
+      className="card"
       style={{
         background: tokens.color.surface,
         border: `1px solid ${tokens.color.border}`,
@@ -24,6 +25,7 @@ export function Button({ children, style, ...props }: ButtonHTMLAttributes<HTMLB
   return (
     <button
       {...props}
+      className={`btn${props.className ? ` ${props.className}` : ""}`}
       style={{
         background: tokens.color.primary,
         color: tokens.color.primaryText,
@@ -114,11 +116,12 @@ const badgeLabels: Record<string, string> = {
   Archived: "ARKIVERAD",
 };
 
-/** Stämpel-lik statusmarkering: ram + versaler i stämpelfärg, aningen sned som en stämpel. */
+/** Stämpel-lik statusmarkering: ram + versaler i stämpelfärg, aningen sned; slår ner i papperet vid render. */
 export function Badge({ status }: { status: string }) {
   const color = badgeColors[status] ?? tokens.color.textMuted;
   return (
     <span
+      className="badge-stamp"
       style={{
         display: "inline-block",
         border: `1.5px solid ${color}`,

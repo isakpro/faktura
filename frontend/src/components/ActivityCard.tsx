@@ -21,6 +21,13 @@ function describeAction(e: AuditEntryDto): string {
   if (is(/^\/api\/invoices\/[^/]+\/credit$/)) return "Skapade kreditfaktura";
   if (is(/^\/api\/invoices\/[^/]+\/email$/)) return "Mejlade faktura";
   if (is(/^\/api\/invoices\/[^/]+\/remind$/)) return "Skickade betalningspåminnelse";
+  if (is(/^\/api\/invoices\/[^/]+\/payments$/)) return "Registrerade betalning";
+  if (is(/^\/api\/invoices\/[^/]+\/share$/)) return "Delade kundlänk";
+  if (is(/^\/api\/organization-profile$/)) return "Ändrade fakturaprofil";
+  if (is(/^\/api\/api-keys$/)) return "Skapade API-nyckel";
+  if (is(/^\/api\/api-keys\/[^/]+$/)) return "Återkallade API-nyckel";
+  if (is(/^\/api\/webhooks$/)) return "La till webhook-mottagare";
+  if (is(/^\/api\/webhooks\/[^/]+$/)) return "Tog bort webhook-mottagare";
   if (is(/^\/api\/invoices\/[^/]+$/)) return "Ändrade fakturautkast";
   if (is(/^\/api\/invoices$/)) return "Skapade fakturautkast";
   if (is(/^\/api\/customers\/[^/]+\/archive$/)) return "Arkiverade kund";

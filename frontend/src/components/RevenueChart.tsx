@@ -48,12 +48,13 @@ export function RevenueChart({ data }: { data: MonthlyRevenueDto[] }) {
         const y = topZone + plotHeight - barHeight;
         return (
           <g key={`${m.year}-${m.month}`}>
-            {/* Rundad datatopp, rak baslinje: topphalvan rundas, botten täcks av en rak rect. */}
+            {/* Rundad datatopp, rak baslinje: topphalvan rundas, botten täcks av en rak rect.
+                Klassen .chart-bar ger väx-animation (stagger per månad) + röd hover via g:hover. */}
             {barHeight > 0 && (
               <>
-                <rect x={x} y={y} width={barWidth} height={barHeight} rx={4} fill={tokens.color.primary} />
+                <rect className="chart-bar" style={{ animationDelay: `${i * 0.04}s` }} x={x} y={y} width={barWidth} height={barHeight} rx={4} fill={tokens.color.primary} />
                 {barHeight > 4 && (
-                  <rect x={x} y={topZone + plotHeight - Math.min(4, barHeight)} width={barWidth} height={Math.min(4, barHeight)} fill={tokens.color.primary} />
+                  <rect className="chart-bar" style={{ animationDelay: `${i * 0.04}s` }} x={x} y={topZone + plotHeight - Math.min(4, barHeight)} width={barWidth} height={Math.min(4, barHeight)} fill={tokens.color.primary} />
                 )}
               </>
             )}

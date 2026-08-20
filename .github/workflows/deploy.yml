@@ -40,7 +40,7 @@ jobs:
 
       - name: Setup Node
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' && hashFiles('frontend/package.json') != '' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
